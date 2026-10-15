@@ -1,0 +1,9 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>照片商品定位</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div><small>我的货架</small><h1>照片商品定位</h1></div><button id="menu">管理</button></header>
+<div class="search"><span>⌕</span><input id="search" placeholder="输入部分型号，即刻定位" autocomplete="off"><button id="clear">清空</button></div>
+<div class="meta"><button id="photos">选择照片</button><span id="count"></span><span id="modeText">浏览</span></div>
+<main id="stage"><canvas id="canvas"></canvas><div id="empty"><div class="empty-icon">▧</div><h2>把货架装进手机</h2><p>导入一张实拍照片，在商品上添加标记。<br>下次输入型号，就能找到它。</p><button class="primary" id="importFirst">导入货架照片</button></div><div id="nav"><button id="prev">↑</button><button id="next">↓</button></div><div id="hint"></div></main>
+<div id="editbar" hidden><button id="add">＋ 连续标记</button><button id="undo">撤销</button><button id="redo">重做</button><button id="editSelected">修改选中</button></div>
+<footer><button id="fit">全图</button><button id="zoomout">－</button><button id="zoomin">＋</button><button id="edit" class="primary">进入编辑</button></footer>
+<dialog id="dialog"><form id="form"><div id="dialogBody"></div><div class="actions"><button type="button" id="cancel">取消</button><button type="submit" class="primary" id="save">保存</button></div></form></dialog><div id="toast"></div>
+<script src="model.js"></script><script src="app.js"></script></body></html>
