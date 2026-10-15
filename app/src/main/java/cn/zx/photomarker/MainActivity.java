@@ -17,7 +17,7 @@ import org.json.*;
 
 public class MainActivity extends Activity {
  private WebView web; private File data, staging; private boolean recoveryExport=false; private final ExecutorService io=Executors.newSingleThreadExecutor();
- @Override public void onCreate(Bundle b){super.onCreate(b);getWindow().setStatusBarColor(Color.rgb(245,247,247));getWindow().setNavigationBarColor(Color.WHITE);getWindow().getDecorView().setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+ @Override public void onCreate(Bundle b){super.onCreate(b);getWindow().setStatusBarColor(Color.TRANSPARENT);getWindow().setNavigationBarColor(Color.TRANSPARENT);getWindow().getAttributes().layoutInDisplayCutoutMode=android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;enterFullscreen();
   data=new File(getFilesDir(),"data"); File previous=new File(getFilesDir(),"previous");if(!data.exists()&&previous.exists())previous.renameTo(data);data.mkdirs();new File(data,"images").mkdirs();
   web=new WebView(this);web.setBackgroundColor(Color.rgb(23,42,50));web.getSettings().setJavaScriptEnabled(true);web.getSettings().setAllowFileAccess(false);web.getSettings().setAllowContentAccess(false);web.getSettings().setDomStorageEnabled(false);web.addJavascriptInterface(new Bridge(),"Native");
   web.setWebViewClient(new WebViewClient(){
@@ -27,6 +27,8 @@ public class MainActivity extends Activity {
  }
  private static void copy(InputStream in,OutputStream out)throws IOException{byte[] buffer=new byte[65536];int n;while((n=in.read(buffer))!=-1)out.write(buffer,0,n);}
  private static byte[] readBytes(InputStream in)throws IOException{ByteArrayOutputStream out=new ByteArrayOutputStream();copy(in,out);return out.toByteArray();}
+ private void enterFullscreen(){getWindow().getDecorView().setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE|android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|android.view.View.SYSTEM_UI_FLAG_FULLSCREEN|android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);}
+ @Override public void onWindowFocusChanged(boolean focused){super.onWindowFocusChanged(focused);if(focused)enterFullscreen();}
  private WebResourceResponse empty(){return new WebResourceResponse("text/plain","UTF-8",new ByteArrayInputStream(new byte[0]));}
  private void js(String name,String arg){runOnUiThread(()->web.evaluateJavascript("window."+name+"("+arg+")",null));}
  private void message(String text){js("onNativeMessage",JSONObject.quote(text));}
@@ -54,4 +56,3 @@ public class MainActivity extends Activity {
  @Override public void onBackPressed(){web.evaluateJavascript("document.getElementById('dialog').open",value->{if("true".equals(value))web.evaluateJavascript("document.getElementById('dialog').close()",null);else new AlertDialog.Builder(this).setMessage("退出照片商品定位？资料已自动保存。").setNegativeButton("继续使用",null).setPositiveButton("退出",(d,w)->finish()).show();});}
  @Override protected void onDestroy(){super.onDestroy();io.shutdown();}
 }
-

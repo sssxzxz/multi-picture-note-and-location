@@ -4,6 +4,7 @@
 <div class="meta"><button id="photos">选择照片</button><span id="count"></span><span id="modeText">浏览</span></div>
 <main id="stage"><canvas id="canvas"></canvas><div id="empty"><div class="empty-icon">▧</div><h2>把货架装进手机</h2><p>导入一张实拍照片，在商品上添加标记。<br>下次输入型号，就能找到它。</p><button class="primary" id="importFirst">导入货架照片</button></div><div id="nav"><button id="prev">↑</button><button id="next">↓</button></div><div id="hint"></div></main>
 <div id="editbar" hidden><button id="add">＋ 连续标记</button><button id="undo">撤销</button><button id="redo">重做</button><button id="editSelected">修改选中</button></div>
-<footer><button id="fit">全图</button><button id="zoomout">－</button><button id="zoomin">＋</button><button id="edit" class="primary">进入编辑</button></footer>
+<footer><button id="fit">铺满</button><button id="zoomout">－</button><button id="zoomin">＋</button><button id="edit" class="primary">进入编辑</button></footer>
+<button id="toggleTools" aria-pressed="false">隐藏工具</button>
 <dialog id="dialog"><form id="form"><div id="dialogBody"></div><div class="actions"><button type="button" id="cancel">取消</button><button type="submit" class="primary" id="save">保存</button></div></form></dialog><div id="toast"></div>
 <script src="model.js"></script><script src="app.js"></script></body></html>

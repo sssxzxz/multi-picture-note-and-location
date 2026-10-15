@@ -13,7 +13,7 @@ function refresh(fit=true){const list=M.results(state,q);if(!list.some(x=>x.id==
  if(loadedFile!==photo.file){const token=++photoToken;bitmap=null;const img=new Image();img.onload=()=>{if(token!==photoToken)return;bitmap=img;loadedFile=photo.file;fitTargets();};img.onerror=()=>{if(token!==photoToken)return;toast('照片读取失败，请恢复完整备份');};img.src=bridge?'https://local.app/images/'+photo.file:photo.preview;}
  else if(fit)fitTargets();else draw();
 }
-function fitAll(){if(!bitmap)return;scale=Math.min(cw/bitmap.width,ch/bitmap.height)*.94;tx=(cw-bitmap.width*scale)/2;ty=(ch-bitmap.height*scale)/2;draw();}
+function fitAll(){if(!bitmap)return;scale=Math.max(cw/bitmap.width,ch/bitmap.height);tx=(cw-bitmap.width*scale)/2;ty=(ch-bitmap.height*scale)/2;draw();}
 function fitTargets(){if(!bitmap)return;const hits=p()?M.matches(state,p(),q):[];if(!hits.length){fitAll();return;}let left=1,top=1,right=0,bottom=0;hits.forEach(m=>{let a=m.angle*Math.PI/180;let w=m.shape==='dot'?.02:Math.abs(m.w*Math.cos(a))+Math.abs(m.h*bitmap.height/bitmap.width*Math.sin(a));let h=m.shape==='dot'?.02:Math.abs(m.h*Math.cos(a))+Math.abs(m.w*bitmap.width/bitmap.height*Math.sin(a));left=Math.min(left,m.x-w/2);right=Math.max(right,m.x+w/2);top=Math.min(top,m.y-h/2);bottom=Math.max(bottom,m.y+h/2);});let w=Math.max((right-left)*bitmap.width,bitmap.width*.18),h=Math.max((bottom-top)*bitmap.height,bitmap.height*.18);scale=Math.min((cw-64)*.72/w,ch*.70/h);tx=(cw-64)/2-(left+right)/2*bitmap.width*scale;ty=ch/2-(top+bottom)/2*bitmap.height*scale;draw();}
 function zoom(f,x=cw/2,y=ch/2){if(!bitmap)return;const base=Math.min(cw/bitmap.width,ch/bitmap.height),next=Math.max(base*.3,Math.min(base*30,scale*f));tx=x-(x-tx)*next/scale;ty=y-(y-ty)*next/scale;scale=next;draw();}
 function draw(){ctx.clearRect(0,0,cw,ch);if(!bitmap||!p())return;ctx.drawImage(bitmap,tx,ty,bitmap.width*scale,bitmap.height*scale);const labels=[];const font=state.settings.font;ctx.font=`600 ${font}px sans-serif`;const marks=[...p().marks].sort((a,b)=>Number(M.product(state,a).model.includes(q)&&!!q)-Number(M.product(state,b).model.includes(q)&&!!q));
@@ -58,3 +58,5 @@ $('prev').onclick=()=>next(-1);$('next').onclick=()=>next(1);$('photos').onclick
 try{const text=bridge?bridge.load():localStorage.getItem('photo-marker');if(text)state=M.validate(JSON.parse(text));}catch(e){toast('资料无法读取：'+e.message);}
 refresh();
 
+
+$('toggleTools').onclick=()=>{const hidden=document.body.classList.toggle('tools-hidden');$('toggleTools').textContent=hidden?'显示工具':'隐藏工具';$('toggleTools').setAttribute('aria-pressed',String(hidden));};
