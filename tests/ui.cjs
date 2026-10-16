@@ -22,4 +22,19 @@ if(await page.evaluate(()=>Object.values(state.products).some(p=>p.model==='1300
 await page.locator('#menu').click();await page.locator('#products').click();await page.locator('#selectAllProducts').click();await page.locator('#deleteProducts').click();await page.locator('#save').click();
 if(!await page.evaluate(()=>state.photos.length===2&&state.photos.every(p=>!p.marks.length)&&!Object.keys(state.products).length))throw Error('全部商品删除或照片保留失败');await page.locator('#undo').click();
 console.log('新增通过：开关关闭后拖动/双指/手动隐藏、恢复设置、空型号自动编号、批量删除确认/取消/跨图/全选/撤销。');
+
+// Exercise confirmations against a unique product and a product shared across photos.
+await page.evaluate(()=>{window.deleteToasts=[];toast=t=>window.deleteToasts.push(t);editMark(p().marks.find(m=>M.product(state,m).model.startsWith('自动编号')));});
+const beforeDelete=await page.evaluate(()=>JSON.stringify(state));
+await page.locator('#deleteMark').click();if(!(await page.locator('#dialogBody').innerText()).includes('最后一个位置'))throw Error('最后位置缺少关联删除提示');if(await page.locator('#save').innerText()!=='确认删除')throw Error('删除按钮文案错误');await page.locator('#cancel').click();
+if(await page.evaluate(()=>JSON.stringify(state))!==beforeDelete)throw Error('取消标记删除改变资料');
+await page.evaluate(()=>editMark(p().marks.find(m=>M.product(state,m).model.startsWith('自动编号'))));await page.locator('#deleteMark').click();await page.locator('#save').click();
+if(await page.evaluate(()=>Object.values(state.products).some(p=>p.model.startsWith('自动编号'))))throw Error('最后位置未清理商品');await page.locator('#undo').click();
+await page.evaluate(()=>editMark(p().marks.find(m=>M.product(state,m).model==='1300')));await page.locator('#deleteMark').click();if(!(await page.locator('#dialogBody').innerText()).includes('还有 2 个位置'))throw Error('共有型号提示错误');await page.locator('#save').click();if(!await page.evaluate(()=>Object.values(state.products).some(p=>p.model==='1300')))throw Error('仍有位置的商品被删除');await page.locator('#undo').click();
+const photoExpected=await page.evaluate(()=>({name:p().name,marks:p().marks.length}));await page.locator('#menu').click();await page.locator('#removePhoto').click();const photoPrompt=await page.locator('#dialogBody').innerText();if(!photoPrompt.includes(photoExpected.name)||!photoPrompt.includes(photoExpected.marks+' 个位置标记')||!photoPrompt.includes('1 个商品资料'))throw Error('删除照片范围提示错误');await page.locator('#cancel').click();if(await page.evaluate(()=>JSON.stringify(state))!==beforeDelete)throw Error('取消照片删除改变资料');
+await page.locator('#menu').click();await page.locator('#removePhoto').click();await page.locator('#save').click();if(!await page.evaluate(()=>state.photos.length===1&&!Object.values(state.products).some(p=>p.model.startsWith('自动编号'))))throw Error('照片删除关联清理失败');await page.locator('#undo').click();
+await page.locator('#menu').click();await page.locator('#products').click();await page.locator('#productList button').filter({hasText:'1300 ·'}).click();await page.locator('#deleteProduct').click();if(!(await page.locator('#dialogBody').innerText()).includes('1 个商品及其全部 3 个位置标记'))throw Error('单商品删除提示错误');await page.locator('#save').click();await page.locator('#undo').click();
+await page.locator('#menu').click();await page.locator('#products').click();await page.locator('#selectAllProducts').click();await page.locator('#deleteProducts').click();await page.locator('#save').click();await page.locator('#undo').click();
+if(await page.evaluate(()=>window.deleteToasts.length))throw Error('删除后出现结果提示');
+console.log('通过：最后位置/共享位置/照片/单商品/批量删除确认、取消不修改、关联清理、撤销、删除后无提示。');
 if(errors.length)throw Error(errors.join('\n'));console.log('通过：32标记照片、实时搜索、上下切换、已有型号带出、共享价格保存、撤销重做、统一字号；无脚本错误。');await browser.close();})().catch(e=>{console.error(e);process.exit(1);});
