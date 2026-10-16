@@ -3,3 +3,5 @@
 
 .meta{top:var(--photo-info-top,80px);z-index:4;width:auto;right:auto;max-width:calc(100% - 24px);padding:0 10px;gap:12px;background:#173038;box-shadow:0 2px 8px #0003;min-height:36px}.meta #photos{flex:1;min-width:0;max-width:calc(100vw - 110px);margin:0;padding:4px 0;line-height:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.meta #count{flex:none;white-space:nowrap;color:#c5dedb;font-variant-numeric:tabular-nums}#hint,#modeText{display:none!important}
 .search,header button{background:#f5faf9}
+
+.product-row{display:flex;align-items:center;gap:10px}.product-row input[type=checkbox]{width:24px;height:24px;flex:none}.product-row button{flex:1;min-width:0;text-align:left;overflow-wrap:anywhere}
