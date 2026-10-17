@@ -3,7 +3,7 @@
  const fresh=()=>({version:1,photos:[],products:{},settings:{autoHideTools:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
  function product(s,m){return s.products[m.product]||{model:'',price:'',attrs:{}};}
- function matches(s,p,q){return q?p.marks.filter(m=>product(s,m).model.includes(q)):[];}
+ function matches(s,p,q){const query=q.toLowerCase();return query?p.marks.filter(m=>product(s,m).model.toLowerCase().includes(query)):[];}
  function results(s,q){return q?s.photos.filter(p=>matches(s,p,q).length):s.photos;}
  function saveProduct(s,m,model,price,attrs){
   model=model.trim()||nextModel(s); let key=Object.keys(s.products).find(k=>s.products[k].model===model);
