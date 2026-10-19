@@ -64,4 +64,12 @@ for(let n=0;n<3;n++){
 await page.mouse.move(tapX,tapY);await page.mouse.down();await page.mouse.move(tapX+35,tapY+20,{steps:5});await page.mouse.up();if(await page.locator('#dialog').evaluate(e=>e.open))throw Error('拖动标记误开弹窗');
 await page.evaluate(()=>{selected=null;adding=true;});await page.locator('#canvas').click({position:{x:200,y:400}});if(!(await page.locator('#dialogBody h2').innerText()).includes('添加标记'))throw Error('新增标记点击失效');await page.locator('#cancel').click();
 console.log('通过：触摸释放不提前打开弹窗、连续三次标记单击无穿透、弹窗新点击有效、拖动不弹窗、新增标记正常。');
+
+await page.evaluate(()=>{window.Native.captureProductImage=request=>{window.cameraToken=request;};adding=false;editMark(p().marks.find(m=>M.product(state,m).model==='新品附图'));});
+const priorImages=await page.locator('#productImages img').count();
+await page.locator('#captureProductImage').click();if(!await page.locator('#addProductImages').isDisabled()||!await page.locator('#captureProductImage').isDisabled())throw Error('拍照期间未阻止重复导入');await page.evaluate(()=>onProductImagesImported({request:window.cameraToken,files:[],error:''}));if(await page.locator('#productImages img').count()!==priorImages||await page.locator('#captureProductImage').isDisabled())throw Error('取消拍摄未恢复');
+for(const file of ['img_camera1.jpg','img_camera2.jpg']){await page.locator('#captureProductImage').click();await page.evaluate(file=>onProductImagesImported({request:window.cameraToken,files:[file],error:''}),file);}
+if(await page.locator('#productImages img').count()!==priorImages+2)throw Error('连续拍照未追加图片');await page.locator('#save').click();if(!await page.evaluate(()=>Object.values(state.products).find(p=>p.model==='新品附图').images.includes('img_camera2.jpg')))throw Error('拍照图片未保存到商品');
+await page.evaluate(()=>editMark(p().marks.find(m=>M.product(state,m).model==='新品附图')));await page.locator('#captureProductImage').click();await page.evaluate(()=>onProductImagesImported({request:window.cameraToken,files:[],error:'未找到可用的相机应用'}));if(await page.locator('#captureProductImage').isDisabled()||await page.locator('#addProductImages').isDisabled())throw Error('相机失败后入口未恢复');await page.locator('#cancel').click();
+console.log('通过：拍照入口、连续拍摄追加、取消无变更、导入互斥、失败恢复和商品图片保存。');
 if(errors.length)throw Error(errors.join('\n'));console.log('通过：32标记照片、实时搜索、上下切换、已有型号带出、共享价格保存、撤销重做、统一字号；无脚本错误。');await browser.close();})().catch(e=>{console.error(e);process.exit(1);});

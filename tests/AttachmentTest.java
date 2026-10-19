@@ -26,12 +26,21 @@ public class AttachmentTest extends Instrumentation {
  void export(File file)throws Exception{try(OutputStream out=new FileOutputStream(file)){call("backup",new Class<?>[]{OutputStream.class},out);}}
  void restore(File file)throws Exception{call("prepareRestore",new Class<?>[]{Uri.class},Uri.fromFile(file));}
  void waitFor(String script)throws Exception{for(int i=0;i<100;i++){if("true".equals(eval(script)))return;Thread.sleep(100);}throw new Exception("Condition timed out: "+script);}
- void tap(float x,float y){long now=SystemClock.uptimeMillis();android.view.MotionEvent down=android.view.MotionEvent.obtain(now,now,0,x,y,0),up=android.view.MotionEvent.obtain(now,now+60,1,x,y,0);sendPointerSync(down);sendPointerSync(up);down.recycle();up.recycle();waitForIdleSync();}
+ void tap(float x,float y){long now=SystemClock.uptimeMillis();android.view.MotionEvent down=android.view.MotionEvent.obtain(now,now,0,x,y,0),up=android.view.MotionEvent.obtain(now,now+60,1,x,y,0);down.setSource(android.view.InputDevice.SOURCE_TOUCHSCREEN);up.setSource(android.view.InputDevice.SOURCE_TOUCHSCREEN);sendPointerSync(down);SystemClock.sleep(60);sendPointerSync(up);down.recycle();up.recycle();waitForIdleSync();}
+ void hideKeyboard()throws Exception{eval("document.activeElement.blur()");runOnMainSync(()->((android.view.inputmethod.InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(activity.getWindow().getDecorView().getWindowToken(),0));Thread.sleep(400);}
  public void onStart(){Bundle result=new Bundle();try{
   activity=(MainActivity)startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
   waitFor("typeof Model!=='undefined'");
   // Isolated test directory: never replace an existing application data directory.
   data=new File(activity.getFilesDir(),"attachment-test-"+System.nanoTime());new File(data,"images").mkdirs();Field field=MainActivity.class.getDeclaredField("data");field.setAccessible(true);field.set(activity,data);
+  // Exercise full-resolution camera output with a null result Intent.
+  eval("window.importResult=null;window.onProductImagesImported=r=>window.importResult=r");
+  File cameraDir=new File(activity.getCacheDir(),"camera");cameraDir.mkdirs();File capture=new File(cameraDir,"capture_1234-abcd.jpg");Uri output=Uri.parse("content://cn.zx.photomarker.camera/"+capture.getName());
+  try(OutputStream out=activity.getContentResolver().openOutputStream(output)){out.write(jpeg());}
+  Field cf=MainActivity.class.getDeclaredField("cameraFile"),cr=MainActivity.class.getDeclaredField("cameraRequest");cf.setAccessible(true);cr.setAccessible(true);cf.set(activity,capture);cr.set(activity,"camera-success");runOnMainSync(()->activity.onActivityResult(5,Activity.RESULT_OK,null));waitFor("window.importResult!==null");
+  check("1".equals(eval("window.importResult.files.length")),"camera null intent imports full output");check(!capture.exists(),"capture temporary file removed");
+  eval("window.importResult=null");Files.write(capture.toPath(),jpeg());cf.set(activity,capture);runOnMainSync(()->activity.onActivityResult(5,Activity.RESULT_CANCELED,null));waitFor("window.importResult!==null");check("0".equals(eval("window.importResult.files.length"))&&!capture.exists(),"cancel camera does not add photo");
+  eval("window.importResult=null");cf.set(activity,capture);runOnMainSync(()->activity.onActivityResult(5,Activity.RESULT_OK,null));waitFor("window.importResult!==null");check("0".equals(eval("window.importResult.files.length"))&&"true".equals(eval("!!window.importResult.error")),"missing camera output fails safely");
   File source1=new File(data,"source1.jpg"),source2=new File(data,"source2.jpg");Files.write(source1.toPath(),jpeg());Files.write(source2.toPath(),jpeg());
   eval("window.importResult=null;window.onProductImagesImported=r=>window.importResult=r");
   Field request=MainActivity.class.getDeclaredField("imageRequest");request.setAccessible(true);request.set(activity,"test-import");
@@ -55,15 +64,17 @@ public class AttachmentTest extends Instrumentation {
   // Real Android touch sequence: marker is underneath the dialog's Add Attribute button.
   waitFor("!!bitmap");
   eval("editing=true;adding=false;setToolsHidden(false);editMark(p().marks[0]);");
+  hideKeyboard();
   JSONObject point=new JSONObject(new JSONArray("["+eval("JSON.stringify((()=>{const r=$('addAttr').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,width:innerWidth};})())")+"]").getString(0));
   double x=point.getDouble("x"),y=point.getDouble("y");
-  eval("$('dialog').close();p().marks[0].x=("+x+"-tx)/bitmap.width/scale;p().marks[0].y=("+y+"-ty)/bitmap.height/scale;selected=null;draw();window.releaseWasOpen=null;document.addEventListener('pointerup',()=>window.releaseWasOpen=$('dialog').open)");
+  eval("$('dialog').close();setToolsHidden(true);p().marks[0].x=("+x+"-tx)/bitmap.width/scale;p().marks[0].y=("+y+"-ty)/bitmap.height/scale;selected=null;draw();window.releaseWasOpen=null;document.addEventListener('pointerup',()=>window.releaseWasOpen=$('dialog').open)");
   Field wf=MainActivity.class.getDeclaredField("web");wf.setAccessible(true);WebView wv=(WebView)wf.get(activity);int[] loc=new int[2],width={0};runOnMainSync(()->{wv.getLocationOnScreen(loc);width[0]=wv.getWidth();});float ratio=(float)(width[0]/point.getDouble("width"));
   for(int n=0;n<3;n++){
-   tap(loc[0]+(float)x*ratio,loc[1]+(float)y*ratio);waitFor("$('dialog').open");
+   tap(loc[0]+(float)x*ratio,loc[1]+(float)y*ratio);try{waitFor("$('dialog').open");}catch(Exception e){throw new Exception(e.getMessage()+" target="+eval("document.elementFromPoint("+x+","+y+").outerHTML")+" pointer="+eval("JSON.stringify({release:window.releaseWasOpen,pending:pendingTap,gesture:gesture})"));}
    check("false".equals(eval("window.releaseWasOpen")),"dialog must not open during touch release");
    check("0".equals(eval("$('attrs').children.length")),"opening touch must not activate form button");
-   tap(loc[0]+(float)x*ratio,loc[1]+(float)y*ratio);waitFor("$('attrs').children.length===1");check(true,"new dialog touch works");eval("$('dialog').close()");
+   hideKeyboard();JSONObject button=new JSONObject(new JSONArray("["+eval("JSON.stringify((()=>{const r=$('addAttr').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})())")+"]").getString(0));
+   tap(loc[0]+(float)button.getDouble("x")*ratio,loc[1]+(float)button.getDouble("y")*ratio);waitFor("$('attrs').children.length===1");check(true,"new dialog touch works");eval("$('dialog').close()");
   }
   result.putString("stream","OK: "+checks+" Android attachment import/backup/restore checks\n");finish(Activity.RESULT_OK,result);
  }catch(Throwable e){result.putString("stream","FAIL: "+e.toString()+"\n"+android.util.Log.getStackTraceString(e));finish(Activity.RESULT_CANCELED,result);}}
