@@ -49,4 +49,19 @@ await page.evaluate(()=>onRestored());if(!await page.evaluate(()=>Object.values(
 await page.locator('#menu').click();await page.locator('#products').click();await page.getByRole('checkbox',{name:'选择 新品附图',exact:true}).check();await page.locator('#deleteProducts').click();await page.locator('#save').click();await page.locator('#undo').click();if(!await page.evaluate(()=>Object.values(state.products).find(p=>p.model==='新品附图').images.length===2))throw Error('商品删除撤销丢失图片');
 await page.evaluate(()=>editMark(p().marks.find(m=>M.product(state,m).model==='新品附图')));await page.screenshot({path:path.join(__dirname,'../app/build/product-images-preview.png')});await page.locator('#cancel').click();
 console.log('通过：多图添加、同型号共享、查看大图、附图删除确认/取消、取消编辑、撤销、切换型号隔离、商品资料添加、恢复关联。');
+
+// Put the marker exactly underneath the dialog's Add Attribute button.
+await page.evaluate(()=>{adding=false;editing=true;setToolsHidden(false);editMark(p().marks.find(m=>M.product(state,m).model==='新品附图'));});
+const attrBox=await page.locator('#addAttr').boundingBox();const tapX=Math.round(attrBox.x+attrBox.width/2),tapY=Math.round(attrBox.y+attrBox.height/2);await page.locator('#cancel').click();
+await page.evaluate(({x,y})=>{const m=p().marks.find(m=>M.product(state,m).model==='新品附图');p().marks=p().marks.filter(v=>v!==m);p().marks.push(m);m.x=(x-tx)/bitmap.width/scale;m.y=(y-ty)/bitmap.height/scale;selected=null;draw();window.releaseDialogStates=[];document.addEventListener('pointerup',()=>window.releaseDialogStates.push($('dialog').open));},{x:tapX,y:tapY});
+for(let n=0;n<3;n++){
+ await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:tapX,y:tapY,id:71}]});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ if(!await page.locator('#dialog').evaluate(e=>e.open))throw Error('单次触摸未打开标记编辑');
+ if(await page.locator('#attrs .attr').count())throw Error('打开编辑时点击穿透添加了属性');
+ if(await page.evaluate(()=>window.releaseDialogStates.at(-1)))throw Error('触摸释放时过早打开弹窗');
+ await page.locator('#addAttr').click();if(await page.locator('#attrs .attr').count()!==1)throw Error('弹窗正常新点击被屏蔽');await page.locator('#cancel').click();
+}
+await page.mouse.move(tapX,tapY);await page.mouse.down();await page.mouse.move(tapX+35,tapY+20,{steps:5});await page.mouse.up();if(await page.locator('#dialog').evaluate(e=>e.open))throw Error('拖动标记误开弹窗');
+await page.evaluate(()=>{selected=null;adding=true;});await page.locator('#canvas').click({position:{x:200,y:400}});if(!(await page.locator('#dialogBody h2').innerText()).includes('添加标记'))throw Error('新增标记点击失效');await page.locator('#cancel').click();
+console.log('通过：触摸释放不提前打开弹窗、连续三次标记单击无穿透、弹窗新点击有效、拖动不弹窗、新增标记正常。');
 if(errors.length)throw Error(errors.join('\n'));console.log('通过：32标记照片、实时搜索、上下切换、已有型号带出、共享价格保存、撤销重做、统一字号；无脚本错误。');await browser.close();})().catch(e=>{console.error(e);process.exit(1);});

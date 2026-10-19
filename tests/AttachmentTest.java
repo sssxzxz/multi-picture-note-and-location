@@ -26,6 +26,7 @@ public class AttachmentTest extends Instrumentation {
  void export(File file)throws Exception{try(OutputStream out=new FileOutputStream(file)){call("backup",new Class<?>[]{OutputStream.class},out);}}
  void restore(File file)throws Exception{call("prepareRestore",new Class<?>[]{Uri.class},Uri.fromFile(file));}
  void waitFor(String script)throws Exception{for(int i=0;i<100;i++){if("true".equals(eval(script)))return;Thread.sleep(100);}throw new Exception("Condition timed out: "+script);}
+ void tap(float x,float y){long now=SystemClock.uptimeMillis();android.view.MotionEvent down=android.view.MotionEvent.obtain(now,now,0,x,y,0),up=android.view.MotionEvent.obtain(now,now+60,1,x,y,0);sendPointerSync(down);sendPointerSync(up);down.recycle();up.recycle();waitForIdleSync();}
  public void onStart(){Bundle result=new Bundle();try{
   activity=(MainActivity)startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
   waitFor("typeof Model!=='undefined'");
@@ -51,6 +52,19 @@ public class AttachmentTest extends Instrumentation {
    String before=read();boolean failed=false;try{restore(bad);}catch(Exception e){failed=true;}check(failed&&read().equals(before),"bad backup rejected without data loss");}
   JSONObject old=new JSONObject(state.toString());old.getJSONObject("products").getJSONObject("a").remove("images");write(old.toString());File legacy=new File(activity.getCacheDir(),"legacy.zip");export(legacy);check(entries(legacy).size()==2,"legacy backup export");restore(legacy);waitFor("state.products.a && !state.products.a.images");check(!new JSONObject(read()).getJSONObject("products").getJSONObject("a").has("images"),"legacy restore");
   eval("window.importResult=null");runOnMainSync(()->activity.onActivityResult(4,Activity.RESULT_CANCELED,null));waitFor("window.importResult!==null");check("0".equals(eval("window.importResult.files.length")),"cancel picker completes request");
+  // Real Android touch sequence: marker is underneath the dialog's Add Attribute button.
+  waitFor("!!bitmap");
+  eval("editing=true;adding=false;setToolsHidden(false);editMark(p().marks[0]);");
+  JSONObject point=new JSONObject(new JSONArray("["+eval("JSON.stringify((()=>{const r=$('addAttr').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,width:innerWidth};})())")+"]").getString(0));
+  double x=point.getDouble("x"),y=point.getDouble("y");
+  eval("$('dialog').close();p().marks[0].x=("+x+"-tx)/bitmap.width/scale;p().marks[0].y=("+y+"-ty)/bitmap.height/scale;selected=null;draw();window.releaseWasOpen=null;document.addEventListener('pointerup',()=>window.releaseWasOpen=$('dialog').open)");
+  Field wf=MainActivity.class.getDeclaredField("web");wf.setAccessible(true);WebView wv=(WebView)wf.get(activity);int[] loc=new int[2],width={0};runOnMainSync(()->{wv.getLocationOnScreen(loc);width[0]=wv.getWidth();});float ratio=(float)(width[0]/point.getDouble("width"));
+  for(int n=0;n<3;n++){
+   tap(loc[0]+(float)x*ratio,loc[1]+(float)y*ratio);waitFor("$('dialog').open");
+   check("false".equals(eval("window.releaseWasOpen")),"dialog must not open during touch release");
+   check("0".equals(eval("$('attrs').children.length")),"opening touch must not activate form button");
+   tap(loc[0]+(float)x*ratio,loc[1]+(float)y*ratio);waitFor("$('attrs').children.length===1");check(true,"new dialog touch works");eval("$('dialog').close()");
+  }
   result.putString("stream","OK: "+checks+" Android attachment import/backup/restore checks\n");finish(Activity.RESULT_OK,result);
  }catch(Throwable e){result.putString("stream","FAIL: "+e.toString()+"\n"+android.util.Log.getStackTraceString(e));finish(Activity.RESULT_CANCELED,result);}}
 }
