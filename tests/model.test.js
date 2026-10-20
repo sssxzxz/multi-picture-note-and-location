@@ -12,3 +12,9 @@ test('批量删除跨照片所有位置，保留照片和未选商品，可用�
 
 test('商品图片共享，资料修改保留图片，重新关联使用目标图片',()=>{const s=M.fresh(),a={},b={};M.saveProduct(s,a,'A','',{},['img_one.jpg','img_two.jpg']);M.saveProduct(s,b,'A','2',{});assert.deepEqual(M.product(s,b).images,['img_one.jpg','img_two.jpg']);M.saveProduct(s,b,'B','',{},['img_other.jpg']);M.saveProduct(s,a,'B','3',{});assert.deepEqual(M.product(s,a).images,['img_other.jpg']);});
 test('备份兼容无附图旧数据并拒绝无效附图字段或路径',()=>{const s=M.fresh(),m={id:'m',x:.5,y:.5,w:.1,h:.1,angle:0,shape:'dot'};M.saveProduct(s,m,'A','',{});s.photos=[{id:'p',file:'img_shelf.jpg',name:'货架',marks:[m]}];const prod=M.product(s,m);delete prod.images;assert.doesNotThrow(()=>M.validate(s));prod.images=['img_a.jpg','img_b.jpg'];assert.deepEqual(M.validate(JSON.parse(JSON.stringify(s))),s);for(const invalid of [null,{},['../img_a.jpg'],['https://other/image.jpg'],[123],['img_a.jpg','img_a.jpg']]){prod.images=invalid;assert.throws(()=>M.validate(s));}});
+
+test('标签跟随默认开启，兼容旧备份并保留关闭状态',()=>{
+ const s=M.fresh();assert.equal(s.settings.labelsFollowZoom,true);
+ delete s.settings.labelsFollowZoom;assert.equal(M.normalize(M.validate(JSON.parse(JSON.stringify(s)))).settings.labelsFollowZoom,true);
+ for(const value of [false,true]){s.settings.labelsFollowZoom=value;assert.equal(M.normalize(M.validate(JSON.parse(JSON.stringify(s)))).settings.labelsFollowZoom,value);}
+});
