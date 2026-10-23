@@ -2,9 +2,9 @@
 <header><div><small>我的货架</small><h1>照片商品定位</h1></div><button id="menu">管理</button></header>
 <div class="search"><span>⌕</span><input id="search" placeholder="输入部分型号，即刻定位" autocomplete="off"><button id="clear">清空</button></div>
 <div class="meta"><button id="photos">选择照片</button><span id="count"></span></div>
-<main id="stage"><canvas id="canvas"></canvas><div id="empty"><div class="empty-icon">▧</div><h2>把货架装进手机</h2><p>导入一张实拍照片，在商品上添加标记。<br>下次输入型号，就能找到它。</p><button class="primary" id="importFirst">导入货架照片</button></div><div id="nav"><button id="prev">↑</button><button id="next">↓</button></div></main>
-<div id="editbar" hidden><button id="add">＋ 连续标记</button><button id="undo">撤销</button><button id="redo">重做</button><button id="editSelected">修改选中</button></div>
+<main id="stage"><canvas id="canvas"></canvas><div id="empty"><div class="empty-icon">▧</div><h2>把货架装进手机</h2><p>导入一张实拍照片，在商品上添加标记。<br>下次输入型号，就能找到它。</p><button class="primary" id="importFirst">导入货架照片</button></div><div id="nav"><button id="prev" aria-label="上一张照片">↑ 图</button><button id="next" aria-label="下一张照片">↓ 图</button><div id="targetNav" hidden><button id="targetPrev" aria-label="上一个目标">↑ 目标</button><span id="targetCount"></span><button id="targetNext" aria-label="下一个目标">↓ 目标</button></div></div></main>
+<div id="editbar" hidden><button id="add">＋ 连续标记</button><button id="selectTool">选择/移动</button><button id="penTool">画笔</button><button id="textTool">文字</button><button id="annotationStyle">颜色/大小</button><button id="undo">撤销</button><button id="redo">重做</button><button id="editSelected">修改选中</button></div>
 <footer><button id="fit">铺满</button><button id="zoomout">－</button><button id="zoomin">＋</button><button id="edit" class="primary">进入编辑</button></footer>
 <button id="toggleTools" aria-pressed="false">隐藏工具</button>
 <dialog id="dialog"><form id="form"><div id="dialogBody"></div><div class="actions"><button type="button" id="cancel">取消</button><button type="submit" class="primary" id="save">保存</button></div></form></dialog><div id="toast"></div>
-<script src="model.js"></script><script src="app.js"></script></body></html>
+<script src="model.js"></script><script src="extras.js"></script><script src="app.js"></script></body></html>

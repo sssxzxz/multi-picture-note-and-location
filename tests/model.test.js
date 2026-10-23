@@ -18,3 +18,21 @@ test('标签跟随默认开启，兼容旧备份并保留关闭状态',()=>{
  delete s.settings.labelsFollowZoom;assert.equal(M.normalize(M.validate(JSON.parse(JSON.stringify(s)))).settings.labelsFollowZoom,true);
  for(const value of [false,true]){s.settings.labelsFollowZoom=value;assert.equal(M.normalize(M.validate(JSON.parse(JSON.stringify(s)))).settings.labelsFollowZoom,value);}
 });
+
+test('价格导入忽略大小写、保留未匹配资料，冲突和无效价格跳过',()=>{
+ const s=M.fresh();s.products={a:{model:'Ab12',price:'9',attrs:{颜色:'黑'},images:['img_a.jpg']},b:{model:'AB12',price:'8',attrs:{}},c:{model:'other',price:'7'},d:{model:'conflict',price:'6'},e:{model:'zero',price:'3'},f:{model:'blank',price:'4'},g:{model:'m14',price:'5'}};
+ const rows=[['型号','价格'],['ab12','12.50'],['AB12','12.500'],['CONFLICT','1'],['conflict','2'],['zero','0'],['blank',''],['other','-2'],['m14 zpm14','4']];
+ const before=JSON.stringify(s),plan=M.pricePlan(s,rows,0,1,1);assert.equal(JSON.stringify(s),before);
+ assert.deepEqual(plan.updates.map(u=>[u.id,u.price]),[['a','12.5'],['b','12.5'],['e','0']]);assert.equal(plan.blocked,1);assert.equal(plan.invalid,2);assert.equal(plan.unmatched,3);assert.equal(plan.conflicts.length,1);
+ for(const u of plan.updates)s.products[u.id].price=u.price;assert.equal(s.products.c.price,'7');assert.equal(s.products.a.model,'Ab12');assert.deepEqual(s.products.a.images,['img_a.jpg']);assert.equal(s.products.g.price,'5');
+});
+test('目标按照片顺序与同图从左到右、从上到下排列',()=>{
+ const s=M.fresh();s.products={a:{model:'AB12'}};const mark=(id,x,y)=>({id,x,y,product:'a'});s.photos=[{id:'p1',marks:[mark('right',.8,.1),mark('lower',.2,.8),mark('upper',.2,.2)]},{id:'p2',marks:[mark('last',.1,.1)]}];assert.deepEqual(M.targets(s,'ab').map(t=>t.mark.id),['upper','lower','right','last']);
+});
+test('目标严格居中，中心目标最小铺满，边缘限制放大',()=>{
+ for(const [w,h,cw,ch] of [[1200,900,412,850],[900,1600,850,412]])for(const [x,y] of [[.5,.5],[.2,.7],[0,1],[1,0]]){const v=M.centeredView(w,h,cw,ch,{x,y}),cover=Math.max(cw/w,ch/h);assert.ok(Math.abs(v.tx+x*w*v.scale-cw/2)<1e-8);assert.ok(Math.abs(v.ty+y*h*v.scale-ch/2)<1e-8);assert.ok(v.scale>=cover&&v.scale<=cover*1.5);if(x===.5)assert.equal(v.scale,cover);}
+});
+test('画笔文字备份往返保持数据，拒绝损坏或越界批注',()=>{
+ const s=M.fresh();s.photos=[{id:'p',name:'货架',file:'img_a.jpg',marks:[],annotations:[{id:'s',type:'stroke',color:'#ff0000',width:.01,points:[[.1,.2],[.3,.4]]},{id:'t',type:'text',color:'#ffffff',size:.02,x:.5,y:.5,text:'货架\n第二层'}]}];assert.deepEqual(M.validate(JSON.parse(JSON.stringify(s))),s);
+ const bad=JSON.parse(JSON.stringify(s));bad.photos[0].annotations[0].points[0][0]=2;assert.throws(()=>M.validate(bad));bad.photos[0].annotations=[];bad.photos[0].annotations.push({...s.photos[0].annotations[1],text:''});assert.throws(()=>M.validate(bad));delete bad.photos[0].annotations;assert.doesNotThrow(()=>M.validate(bad));
+});

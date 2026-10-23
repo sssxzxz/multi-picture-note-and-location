@@ -33,6 +33,16 @@ public class AttachmentTest extends Instrumentation {
   waitFor("typeof Model!=='undefined'");
   // Isolated test directory: never replace an existing application data directory.
   data=new File(activity.getFilesDir(),"attachment-test-"+System.nanoTime());new File(data,"images").mkdirs();Field field=MainActivity.class.getDeclaredField("data");field.setAccessible(true);field.set(activity,data);
+  // Read a synthetic XLSX through Android ContentResolver and the bridge callback.
+  File workbook=new File(activity.getCacheDir(),"price-test.xlsx");
+  try(ZipOutputStream zip=new ZipOutputStream(new FileOutputStream(workbook))){
+   String[][] entries={{"xl/workbook.xml","<workbook xmlns:r='http://schemas.openxmlformats.org/officeDocument/2006/relationships'><sheets><sheet name='Prices' r:id='r1'/></sheets></workbook>"},{"xl/_rels/workbook.xml.rels","<Relationships><Relationship Id='r1' Target='worksheets/sheet1.xml'/></Relationships>"},{"xl/worksheets/sheet1.xml","<worksheet><sheetData><row r='1'><c r='A1' t='inlineStr'><is><t>Ab12</t></is></c><c r='B1'><v>12.50</v></c></row></sheetData></worksheet>"}};
+   for(String[] entry:entries){zip.putNextEntry(new ZipEntry(entry[0]));zip.write(entry[1].getBytes("UTF-8"));zip.closeEntry();}
+  }
+  JSONArray parsed=(JSONArray)call("readPriceWorkbook",new Class<?>[]{Uri.class},Uri.fromFile(workbook));check(parsed.getJSONObject(0).getJSONArray("rows").getJSONArray(0).getString(0).equals("Ab12"),"Android XLSX model read");check(parsed.getJSONObject(0).getJSONArray("rows").getJSONArray(0).getString(1).equals("12.5"),"Android XLSX price read");
+  eval("window.priceResult=null;window.onPricesLoaded=r=>window.priceResult=r");Field pr=MainActivity.class.getDeclaredField("priceRequest");pr.setAccessible(true);pr.set(activity,"price-token");Intent workbookIntent=new Intent().setData(Uri.fromFile(workbook));runOnMainSync(()->activity.onActivityResult(6,Activity.RESULT_OK,workbookIntent));waitFor("window.priceResult!==null");check("true".equals(eval("window.priceResult.request==='price-token'&&window.priceResult.sheets[0].rows[0][1]==='12.5'")),"XLSX picker callback");
+  eval("window.priceResult=null");runOnMainSync(()->activity.onActivityResult(6,Activity.RESULT_CANCELED,null));waitFor("window.priceResult!==null");check("true".equals(eval("window.priceResult.cancelled")),"XLSX picker cancellation");
+  Files.write(workbook.toPath(),new byte[]{1,2,3});eval("window.priceResult=null");runOnMainSync(()->activity.onActivityResult(6,Activity.RESULT_OK,workbookIntent));waitFor("window.priceResult!==null");check("true".equals(eval("!!window.priceResult.error")),"XLSX corrupt file error");
   // Exercise full-resolution camera output with a null result Intent.
   eval("window.importResult=null;window.onProductImagesImported=r=>window.importResult=r");
   File cameraDir=new File(activity.getCacheDir(),"camera");cameraDir.mkdirs();File capture=new File(cameraDir,"capture_1234-abcd.jpg");Uri output=Uri.parse("content://cn.zx.photomarker.camera/"+capture.getName());
@@ -50,10 +60,11 @@ public class AttachmentTest extends Instrumentation {
   check(images.length()==2,"multi import");check(imported.getString("request").equals("test-import"),"request isolation");
   source1.delete();source2.delete();for(int i=0;i<images.length();i++)check(new File(data,"images/"+images.getString(i)).isFile(),"independent image copy");
   Files.write(new File(data,"images/img_shelf.jpg").toPath(),jpeg());Files.write(new File(data,"images/img_unused.jpg").toPath(),jpeg());
-  JSONObject state=new JSONObject("{\"version\":1,\"photos\":[{\"id\":\"p\",\"name\":\"shelf\",\"file\":\"img_shelf.jpg\",\"marks\":[{\"id\":\"m\",\"product\":\"a\",\"x\":0.5,\"y\":0.5,\"w\":0.1,\"h\":0.1,\"angle\":0,\"shape\":\"dot\"}]}],\"products\":{\"a\":{\"model\":\"A\",\"price\":\"1\",\"attrs\":{}}},\"settings\":{\"font\":14,\"fields\":[\"model\"]}}");state.getJSONObject("products").getJSONObject("a").put("images",images);write(state.toString());
+  JSONObject state=new JSONObject("{\"version\":1,\"photos\":[{\"id\":\"p\",\"name\":\"shelf\",\"file\":\"img_shelf.jpg\",\"marks\":[{\"id\":\"m\",\"product\":\"a\",\"x\":0.5,\"y\":0.5,\"w\":0.1,\"h\":0.1,\"angle\":0,\"shape\":\"dot\"}]}],\"products\":{\"a\":{\"model\":\"A\",\"price\":\"1\",\"attrs\":{}}},\"settings\":{\"font\":14,\"fields\":[\"model\"]}}");state.getJSONObject("products").getJSONObject("a").put("images",images);state.getJSONArray("photos").getJSONObject(0).put("annotations",new JSONArray("[{\"id\":\"ink\",\"type\":\"stroke\",\"color\":\"#ff0000\",\"width\":0.01,\"points\":[[0.1,0.1],[0.2,0.2]]},{\"id\":\"text\",\"type\":\"text\",\"color\":\"#00ff00\",\"size\":0.02,\"x\":0.1,\"y\":0.1,\"text\":\"shelf note\"}]"));write(state.toString());
   File backup=new File(activity.getCacheDir(),"attachments.zip");export(backup);Set<String> names=entries(backup);check(names.size()==4&&names.contains("images/"+images.getString(0))&&names.contains("images/"+images.getString(1)),"backup contains shelf plus all attachments only");
   JSONObject changed=new JSONObject(state.toString());changed.getJSONObject("products").getJSONObject("a").put("price","99");write(changed.toString());restore(backup);
   waitFor("state.products.a && state.products.a.price==='1'");check(new JSONObject(read()).getJSONObject("products").getJSONObject("a").getJSONArray("images").length()==2,"restored image associations");
+  check("2".equals(eval("state.photos[0].annotations.length")),"annotations restored from full ZIP");check("true".equals(eval("state.photos[0].annotations[1].text==='shelf note'&&state.photos[0].annotations[0].points.length===2")),"stroke and text values restored");
   Field current=MainActivity.class.getDeclaredField("data");current.setAccessible(true);File restoredData=(File)current.get(activity);for(int i=0;i<images.length();i++)check(new File(restoredData,"images/"+images.getString(i)).isFile(),"restored image bytes");
   File recovery=new File(activity.getFilesDir(),"before-restore.zip");check(entries(recovery).contains("images/"+images.getString(1)),"automatic before-restore backup includes images");
   // Missing attachment and damaged attachment must be rejected without replacing current state.
@@ -63,7 +74,7 @@ public class AttachmentTest extends Instrumentation {
   eval("window.importResult=null");runOnMainSync(()->activity.onActivityResult(4,Activity.RESULT_CANCELED,null));waitFor("window.importResult!==null");check("0".equals(eval("window.importResult.files.length")),"cancel picker completes request");
   // Real Android touch sequence: marker is underneath the dialog's Add Attribute button.
   waitFor("!!bitmap");
-  eval("editing=true;adding=false;setToolsHidden(false);editMark(p().marks[0]);");
+  eval("p().annotations=[];editing=true;adding=false;setToolsHidden(false);editMark(p().marks[0]);");
   hideKeyboard();
   JSONObject point=new JSONObject(new JSONArray("["+eval("JSON.stringify((()=>{const r=$('addAttr').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,width:innerWidth};})())")+"]").getString(0));
   double x=point.getDouble("x"),y=point.getDouble("y");

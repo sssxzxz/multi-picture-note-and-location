@@ -2,6 +2,6 @@ plugins { id 'com.android.application' }
 android {
     namespace 'cn.zx.photomarker'
     compileSdk 35
-    defaultConfig { applicationId 'cn.zx.photomarker'; minSdk 28; targetSdk 34; versionCode 12; versionName '0.1.11' }
+    defaultConfig { applicationId 'cn.zx.photomarker'; minSdk 28; targetSdk 34; versionCode 13; versionName '0.1.12' }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
