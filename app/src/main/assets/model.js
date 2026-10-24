@@ -1,6 +1,6 @@
 (function(root){
  'use strict';
- const fresh=()=>({version:1,photos:[],products:{},settings:{confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
+ const fresh=()=>({version:1,photos:[],products:{},settings:{productListTools:true,confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
  function product(s,m){return s.products[m.product]||{model:'',price:'',attrs:{}};}
  function matches(s,p,q){const query=q.toLowerCase();return query?p.marks.filter(m=>product(s,m).model.toLowerCase().includes(query)):[];}
@@ -21,6 +21,7 @@
   for(const [key,p] of Object.entries(s.products)){if(!used.has(key))delete s.products[key];else if(!p.model.trim())p.model=nextModel(s);}
   if(typeof s.settings.autoHideTools!=='boolean')s.settings.autoHideTools=true;
   if(typeof s.settings.labelsFollowZoom!=='boolean')s.settings.labelsFollowZoom=true;
+  if(typeof s.settings.productListTools!=='boolean')s.settings.productListTools=true;
   if(typeof s.settings.confirmDeletion!=='boolean')s.settings.confirmDeletion=true;
   return s;
  }
@@ -74,5 +75,26 @@
    }else throw Error('不支持的批注类型');
   }
  }
- const api={targets,centeredView,pricePlan,fresh,id,product,matches,results,saveProduct,validate,normalize,deleteProducts};if(typeof module!=='undefined')module.exports=api;root.Model=api;
+ // Normalize price display variants without changing stored product data.
+ function priceInfo(value){
+  const text=String(value??'').trim();if(!text)return {key:'empty',label:'未填写价格',number:null};
+  if(/^[+-]?\d+(?:\.\d+)?$/.test(text)&&Number.isFinite(Number(text))){
+   let label=text.replace(/^\+/,'').replace(/^(-?)0+(?=\d)/,'$1').replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');if(Number(label)===0)label='0';
+   return {key:'number:'+label,label,number:Number(label)};
+  }
+  return {key:'text:'+text,label:text,number:null};
+ }
+ function comparePrices(a,b){if(a.key==='empty'||b.key==='empty')return Number(a.key==='empty')-Number(b.key==='empty');if(a.number!==null&&b.number!==null)return a.number-b.number;if(a.number!==null||b.number!==null)return a.number!==null?-1:1;return a.label.localeCompare(b.label,'zh-CN',{numeric:true});}
+ function priceOptions(s){const values=new Map();for(const p of Object.values(s.products)){const info=priceInfo(p.price);if(info.key!=='empty')values.set(info.key,info);}return [...values.values()].sort(comparePrices);}
+ function productRows(s,query='',price='all',sort='original'){
+  const counts=new Map();for(const photo of s.photos)for(const m of photo.marks)counts.set(m.product,(counts.get(m.product)||0)+1);
+  let rows=Object.entries(s.products).map(([id,prod])=>({id,prod,count:counts.get(id)||0}));if(!s.settings.productListTools)return rows;
+  const q=query.trim().toLowerCase();rows=rows.filter(r=>r.prod.model.toLowerCase().includes(q)&&(price==='all'||priceInfo(r.prod.price).key===price));
+  const direction=sort.endsWith('-desc')?-1:1;
+  if(sort.startsWith('model-'))rows.sort((a,b)=>direction*a.prod.model.localeCompare(b.prod.model,'zh-CN',{numeric:true,sensitivity:'base'}));
+  if(sort.startsWith('count-'))rows.sort((a,b)=>direction*(a.count-b.count));
+  if(sort.startsWith('price-'))rows.sort((a,b)=>{const x=priceInfo(a.prod.price),y=priceInfo(b.prod.price);if(x.key==='empty'||y.key==='empty')return Number(x.key==='empty')-Number(y.key==='empty');return direction*comparePrices(x,y);});
+  return rows;
+ }
+ const api={priceInfo,priceOptions,productRows,targets,centeredView,pricePlan,fresh,id,product,matches,results,saveProduct,validate,normalize,deleteProducts};if(typeof module!=='undefined')module.exports=api;root.Model=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
