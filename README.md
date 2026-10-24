@@ -1,6 +1,14 @@
 # 照片商品定位
 
-安卓单机应用，使用实拍货架照片与商品标记来找货。当前版本 0.1.12，是供实际货架试用的首版。
+安卓单机应用，使用实拍货架照片与商品标记来找货。当前版本 0.1.13，是供实际货架试用的首版。
+
+## 0.1.13 删除确认总开关
+
+管理 → 统一显示设置新增“删除前确认”，默认开启。统一控制照片、商品（含批量删除）、位置标记、商品附图、画笔与文本框：开启时展示删除范围并确认，关闭时直接执行；批量删除仅确认一次。删除完成不再显示结果提示，保存失败仍会报告错误。
+
+取消确认或按安卓返回键会保留当前编辑页与尚未保存的内容。附图删除仍先作用于编辑草稿，保存后生效；其他删除保留原有撤销规则。开关随资料保存和完整备份恢复，没有此设置的旧备份默认开启。
+
+17 项数据测试、原有与新增界面回归通过，覆盖七类删除入口在开启/关闭时的确认、取消、关联清理、撤销、无结果提示，以及开关重启/恢复。APK 构建与签名校验通过。新增安卓返回键取消与开关完整备份检查已编译，但本次模拟器持续离线，未获得运行结果；未进行实体手机验证。
 
 ## 0.1.12 价格导入、位置跳转与照片批注
 
@@ -120,6 +128,7 @@ gradle assembleDebug
 node --test tests/model.test.js
 node tests/ui.cjs
 node tests/features-ui.cjs
+node tests/deletion-ui.cjs
 ```
 
 第一项为数据行为测试；第二项为浏览器交互测试，需 Playwright（浏览器自动化测试工具），当前脚本使用制作环境中的浏览器路径。
@@ -142,4 +151,4 @@ node tests/features-ui.cjs
 
 ### Android 附图回归测试
 
-仅在一次性测试模拟器上运行（测试会写入隔离数据目录和恢复前自动备份），不要连接实际使用的手机。先构建应用，再设置 JAVA_HOME 并执行 `tests/build-android-test.ps1` 构建测试 APK；在模拟器安装应用 APK 与 `app/build/attachment-test/attachment-test.apk`，运行 `adb -s emulator-5554 shell am instrument -w cn.zx.photomarker.tests/cn.zx.photomarker.AttachmentTest`。当前测试增加了触摸防穿透检查，完整成功时应输出 `OK: 34 Android attachment import/backup/restore checks`，含 5 项 Excel 读取、4 项相机处理、16 项附图/批注与备份恢复、9 项触摸检查；0.1.12 已全部通过。
+仅在一次性测试模拟器上运行（测试会写入隔离数据目录和恢复前自动备份），不要连接实际使用的手机。先构建应用，再设置 JAVA_HOME 并执行 `tests/build-android-test.ps1` 构建测试 APK；在模拟器安装应用 APK 与 `app/build/attachment-test/attachment-test.apk`，运行 `adb -s emulator-5554 shell am instrument -w cn.zx.photomarker.tests/cn.zx.photomarker.AttachmentTest`。当前测试增加了触摸防穿透检查，当前完整成功时应输出 `OK: 38 Android attachment import/backup/restore checks`，在 0.1.12 已通过的 34 项基础上新增 2 项删除开关备份恢复与 2 项返回键取消检查。0.1.13 本次模拟器持续离线，新增检查尚未取得运行结果。

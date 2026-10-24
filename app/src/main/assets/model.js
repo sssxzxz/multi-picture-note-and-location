@@ -1,6 +1,6 @@
 (function(root){
  'use strict';
- const fresh=()=>({version:1,photos:[],products:{},settings:{autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
+ const fresh=()=>({version:1,photos:[],products:{},settings:{confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
  function product(s,m){return s.products[m.product]||{model:'',price:'',attrs:{}};}
  function matches(s,p,q){const query=q.toLowerCase();return query?p.marks.filter(m=>product(s,m).model.toLowerCase().includes(query)):[];}
@@ -21,6 +21,7 @@
   for(const [key,p] of Object.entries(s.products)){if(!used.has(key))delete s.products[key];else if(!p.model.trim())p.model=nextModel(s);}
   if(typeof s.settings.autoHideTools!=='boolean')s.settings.autoHideTools=true;
   if(typeof s.settings.labelsFollowZoom!=='boolean')s.settings.labelsFollowZoom=true;
+  if(typeof s.settings.confirmDeletion!=='boolean')s.settings.confirmDeletion=true;
   return s;
  }
  function deleteProducts(s,ids){

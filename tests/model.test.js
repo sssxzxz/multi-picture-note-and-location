@@ -36,3 +36,5 @@ test('画笔文字备份往返保持数据，拒绝损坏或越界批注',()=>{
  const s=M.fresh();s.photos=[{id:'p',name:'货架',file:'img_a.jpg',marks:[],annotations:[{id:'s',type:'stroke',color:'#ff0000',width:.01,points:[[.1,.2],[.3,.4]]},{id:'t',type:'text',color:'#ffffff',size:.02,x:.5,y:.5,text:'货架\n第二层'}]}];assert.deepEqual(M.validate(JSON.parse(JSON.stringify(s))),s);
  const bad=JSON.parse(JSON.stringify(s));bad.photos[0].annotations[0].points[0][0]=2;assert.throws(()=>M.validate(bad));bad.photos[0].annotations=[];bad.photos[0].annotations.push({...s.photos[0].annotations[1],text:''});assert.throws(()=>M.validate(bad));delete bad.photos[0].annotations;assert.doesNotThrow(()=>M.validate(bad));
 });
+
+test('删除确认默认开启，旧备份补默认值，开关往返保留',()=>{const s=M.fresh();assert.equal(s.settings.confirmDeletion,true);delete s.settings.confirmDeletion;assert.equal(M.normalize(M.validate(JSON.parse(JSON.stringify(s)))).settings.confirmDeletion,true);for(const value of [false,true]){s.settings.confirmDeletion=value;assert.equal(M.normalize(M.validate(JSON.parse(JSON.stringify(s)))).settings.confirmDeletion,value);}});

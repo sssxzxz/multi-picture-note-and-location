@@ -31,7 +31,7 @@ function editAnnotation(a,isNew=false){
   checkpoint();a.color=$('annotationColor').value;const size=Math.min(1,Number($('annotationSize').value)/(bitmap.width*labelBaseScale));if(text){a.text=content;a.size=size;}else a.width=size;
   if(isNew)(p().annotations??=[]).push(a);annotationSelected=a.id;editTool='select';updateEditTools();persist();draw();
  });
- if(!isNew)$('deleteAnnotation').onclick=()=>{checkpoint();p().annotations=p().annotations.filter(x=>x.id!==a.id);annotationSelected=null;persist();$('dialog').close();draw();};
+ if(!isNew)$('deleteAnnotation').onclick=()=>requestDelete(text?'删除此文本框？':'删除此画笔内容？','仅删除选中的批注，照片及商品标记保留。可以撤销。',()=>{checkpoint();p().annotations=p().annotations.filter(x=>x.id!==a.id);annotationSelected=null;persist();$('dialog').close();draw();});
 }
 function initializeExtras(){
  $('targetPrev').onclick=()=>nextTarget(-1);$('targetNext').onclick=()=>nextTarget(1);
