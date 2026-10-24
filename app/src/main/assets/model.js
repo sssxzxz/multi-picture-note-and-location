@@ -1,6 +1,6 @@
 (function(root){
  'use strict';
- const fresh=()=>({version:1,photos:[],products:{},settings:{productListTools:true,confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
+ const fresh=()=>({version:1,photos:[],products:{},settings:{confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
  function product(s,m){return s.products[m.product]||{model:'',price:'',attrs:{}};}
  function matches(s,p,q){const query=q.toLowerCase();return query?p.marks.filter(m=>product(s,m).model.toLowerCase().includes(query)):[];}
@@ -21,7 +21,7 @@
   for(const [key,p] of Object.entries(s.products)){if(!used.has(key))delete s.products[key];else if(!p.model.trim())p.model=nextModel(s);}
   if(typeof s.settings.autoHideTools!=='boolean')s.settings.autoHideTools=true;
   if(typeof s.settings.labelsFollowZoom!=='boolean')s.settings.labelsFollowZoom=true;
-  if(typeof s.settings.productListTools!=='boolean')s.settings.productListTools=true;
+  delete s.settings.productListTools;
   if(typeof s.settings.confirmDeletion!=='boolean')s.settings.confirmDeletion=true;
   return s;
  }
@@ -88,7 +88,7 @@
  function priceOptions(s){const values=new Map();for(const p of Object.values(s.products)){const info=priceInfo(p.price);if(info.key!=='empty')values.set(info.key,info);}return [...values.values()].sort(comparePrices);}
  function productRows(s,query='',price='all',sort='original'){
   const counts=new Map();for(const photo of s.photos)for(const m of photo.marks)counts.set(m.product,(counts.get(m.product)||0)+1);
-  let rows=Object.entries(s.products).map(([id,prod])=>({id,prod,count:counts.get(id)||0}));if(!s.settings.productListTools)return rows;
+  let rows=Object.entries(s.products).map(([id,prod])=>({id,prod,count:counts.get(id)||0}));
   const q=query.trim().toLowerCase();rows=rows.filter(r=>r.prod.model.toLowerCase().includes(q)&&(price==='all'||priceInfo(r.prod.price).key===price));
   const direction=sort.endsWith('-desc')?-1:1;
   if(sort.startsWith('model-'))rows.sort((a,b)=>direction*a.prod.model.localeCompare(b.prod.model,'zh-CN',{numeric:true,sensitivity:'base'}));
