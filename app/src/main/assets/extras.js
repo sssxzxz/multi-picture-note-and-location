@@ -40,7 +40,7 @@ function initializeExtras(){
 }
 function startPriceImport(){
  if(!bridge?.importPrices){toast('表格导入请在安卓应用中使用');return;}
- priceRequest=M.id();dialog('<h2>导入价格</h2><p>请选择 .xlsx 表格，随后选择型号列和价格列。确认前不会修改资料。</p><p id="priceLoading">正在选择和读取表格…</p>',null,'保存',manage);bridge.importPrices(priceRequest);
+ priceRequest=M.id();dialog('<h2>导入价格</h2><p>请选择 .xlsx 表格，随后选择型号列和价格列。确认前不会修改资料。</p><p id="priceLoading">正在选择和读取表格…</p>',null);bridge.importPrices(priceRequest);
 }
 window.onPricesLoaded=result=>{
  if(result.request!==priceRequest||!$('dialog').open||!$('priceLoading'))return;
@@ -49,26 +49,25 @@ window.onPricesLoaded=result=>{
  if(!result.sheets?.length){$('priceLoading').textContent='表格中没有可读取的工作表';return;}
  choosePriceColumns(result.sheets);
 };
-function choosePriceColumns(sheets,selection=null){
+function choosePriceColumns(sheets){
  dialog('<h2>选择价格来源</h2><label>工作表</label><select id="priceSheet">'+sheets.map((s,i)=>'<option value="'+i+'">'+esc(s.name)+'</option>').join('')+'</select><label>表头行号</label><input type="number" id="headerRow" min="1" max="50000" value="1"><label>型号列</label><select id="modelColumn"></select><label>价格列</label><select id="priceColumn"></select><p class="note">型号完整匹配，忽略大小写与两端空格，不拆分单元格内的文字。空值、无效价格和公式单元格跳过。请选择要使用的价格列。</p><div id="sheetSample" class="import-preview"></div>',()=>{
   const sheet=sheets[Number($('priceSheet').value)],start=Number($('headerRow').value),mc=Number($('modelColumn').value),pc=Number($('priceColumn').value);
   if(mc===pc){toast('型号列与价格列不能相同');return false;}
   const plan=M.pricePlan(state,sheet.rows,mc,pc,start);
   // Defer opening the next dialog until the current submit handler finishes.
-  const chosen={sheet:$('priceSheet').value,header:$('headerRow').value,model:String(mc),price:String(pc)};
-  setTimeout(()=>previewPrices(plan,()=>choosePriceColumns(sheets,chosen)),0);
- },'预览匹配结果',manage);
+  setTimeout(()=>previewPrices(plan),0);
+ },'预览匹配结果');
  const columns=()=>{
   const sheet=sheets[Number($('priceSheet').value)],index=Number($('headerRow').value)-1,header=sheet.rows[index]||[],n=Math.max(header.length,...sheet.rows.slice(index,index+10).map(r=>r.length),2);
   const letter=i=>{let t='';for(i++;i;i=Math.floor((i-1)/26))t=String.fromCharCode(65+(i-1)%26)+t;return t;};
   const options=Array.from({length:n},(_,i)=>'<option value="'+i+'">'+letter(i)+' · '+esc(header[i]||'无标题')+'</option>').join('');$('modelColumn').innerHTML=options;$('priceColumn').innerHTML=options;
   const model=header.findIndex(v=>/型号|model|sku/i.test(v)),price=header.findIndex(v=>/价格|单价|price/i.test(v));$('modelColumn').value=String(model<0?0:model);$('priceColumn').value=String(price<0?1:price);
   $('sheetSample').innerHTML='<p>前几行内容：</p>'+sheet.rows.slice(index,index+5).map(row=>'<p>'+row.map(esc).join(' ｜ ')+'</p>').join('');
- };$('priceSheet').onchange=columns;$('headerRow').onchange=columns;if(selection){$('priceSheet').value=selection.sheet;$('headerRow').value=selection.header;}columns();if(selection){$('modelColumn').value=selection.model;$('priceColumn').value=selection.price;}
+ };$('priceSheet').onchange=columns;$('headerRow').onchange=columns;columns();
 }
-function previewPrices(plan,back=manage){
+function previewPrices(plan){
  dialog('<h2>确认覆盖价格</h2><p>将更新 '+plan.updates.length+' 个商品。未匹配 '+plan.unmatched+' 个，价格相同 '+plan.unchanged+' 个，冲突跳过 '+plan.blocked+' 个。</p><p>表格中空白型号或无效价格行：'+plan.invalid+' 行。</p><div class="import-preview">'+plan.updates.map(u=>'<p>'+esc(u.model)+'：'+esc(u.before||'未填写')+' → '+esc(u.price)+'</p>').join('')+'</div>'+(plan.conflicts.length?'<h3>以下型号价格冲突，跳过</h3><div class="import-preview">'+plan.conflicts.map(c=>'<p>'+esc(c.model)+'：'+c.prices.map(esc).join(' / ')+'</p>').join('')+'</div>':'')+'<p class="note">只覆盖以上商品的价格，型号、位置、图片及其他资料保留。可通过撤销还原。</p>',plan.updates.length?()=>{
   const before=JSON.stringify(state);checkpoint();for(const u of plan.updates)if(state.products[u.id])state.products[u.id].price=u.price;
   if(!persist()){state=JSON.parse(before);history.pop();draw();return false;}draw();toast('已更新 '+plan.updates.length+' 个商品价格');
- }:null,'确认导入',back);
+ }:null,'确认导入');
 }
