@@ -1,6 +1,6 @@
 (function(root){
  'use strict';
- const fresh=()=>({version:1,photos:[],products:{},settings:{confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
+ const fresh=()=>({version:1,photos:[],products:{},settings:{language:'auto',confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
  function product(s,m){return s.products[m.product]||{model:'',price:'',attrs:{}};}
  function matches(s,p,q){const query=q.toLowerCase();return query?p.marks.filter(m=>product(s,m).model.toLowerCase().includes(query)):[];}
@@ -22,6 +22,7 @@
   if(typeof s.settings.autoHideTools!=='boolean')s.settings.autoHideTools=true;
   if(typeof s.settings.labelsFollowZoom!=='boolean')s.settings.labelsFollowZoom=true;
   delete s.settings.productListTools;
+  if(!['auto','zh-CN','zh-TW','en','bg','ja','ko','ru','de','fr','es'].includes(s.settings.language))s.settings.language='auto';
   if(typeof s.settings.confirmDeletion!=='boolean')s.settings.confirmDeletion=true;
   return s;
  }

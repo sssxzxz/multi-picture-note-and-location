@@ -4,7 +4,7 @@ const M=require('../app/src/main/assets/model.js');
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:'C:/Users/49482/AppData/Local/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-win64/chrome-headless-shell.exe',args:['--no-sandbox']});
  try{
- const page=await browser.newPage({viewport:{width:412,height:850}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const page=await browser.newPage({locale:"zh-CN",viewport:{width:412,height:850}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  const s=M.fresh();s.products={a:{model:'Ab12',price:'9',attrs:{材质:'木'},images:[]},b:{model:'ab12',price:'8',attrs:{}},c:{model:'C9',price:'7',attrs:{}}};
  const mark=(id,product,x,y)=>({id,product,x,y,shape:'dot',angle:0,w:.08,h:.06});
  s.photos=[{id:'p1',name:'第一张',file:'img_a.jpg',marks:[mark('right','a',.7,.4),mark('left','a',.05,.4),mark('middle','b',.4,.6),mark('other','c',.5,.7)]},{id:'p2',name:'第二张',file:'img_b.jpg',marks:[mark('last','a',.1,.4)]}];

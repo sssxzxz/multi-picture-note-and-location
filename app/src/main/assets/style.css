@@ -11,3 +11,6 @@
 #nav button{font-size:15px;padding:9px}#targetNav{display:flex;flex-direction:column;gap:6px;align-items:stretch;margin-top:8px}#targetNav[hidden]{display:none}#targetCount{color:white;text-align:center;background:#173038;border-radius:6px;padding:4px}#editbar{flex-wrap:wrap;max-height:150px;overflow:auto}#locations button{width:100%}.import-preview{max-height:220px;overflow:auto;overflow-wrap:anywhere}.import-preview p{margin:6px 0}
 
 #locationBack{position:fixed;left:12px;top:140px;z-index:15}#locationBack[hidden]{display:none}
+
+/* Reserve space for translated menu labels and allow long option text to fit. */
+.search{right:calc(var(--menu-width,60px) + 24px)}header{max-width:40vw}header button{max-width:40vw;overflow-wrap:anywhere}.grid>*{min-width:0}select{max-width:100%}#nav{max-width:40vw}#nav button{overflow-wrap:anywhere}
