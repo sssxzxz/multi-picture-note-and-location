@@ -51,9 +51,11 @@ canvas.addEventListener('pointerup',pointerEnd);canvas.addEventListener('pointer
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let dialogParent=null,locationReturn=null;
 function clearLocationReturn(){locationReturn=null;$('locationBack').hidden=true;}
-function returnFromLocation(){if(!locationReturn)return false;const saved=locationReturn;clearLocationReturn();$('dialogBody').replaceChildren(...saved.nodes);$('form').onsubmit=saved.submit;dialogParent=saved.parent;$('save').hidden=saved.hidden;$('save').textContent=saved.label;$('cancel').textContent=saved.cancel;$('dialog').showModal();return true;}
+function focusManagementHeading(){if(!dialogParent||!$('dialog').open||document.querySelector('#deleteConfirm[open],#imageViewer[open]'))return;const heading=$('dialogBody').querySelector('h2');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}bridge?.dismissKeyboard?.();}
+function showMainDialog(){if(dialogParent){const heading=$('dialogBody').querySelector('h2');if(heading){heading.tabIndex=-1;heading.setAttribute('autofocus','');}}$('dialog').showModal();focusManagementHeading();}
+function returnFromLocation(){if(!locationReturn)return false;const saved=locationReturn;clearLocationReturn();$('dialogBody').replaceChildren(...saved.nodes);$('form').onsubmit=saved.submit;dialogParent=saved.parent;$('save').hidden=saved.hidden;$('save').textContent=saved.label;$('cancel').textContent=saved.cancel;showMainDialog();return true;}
 $('locationBack').onclick=returnFromLocation;
-function dialog(html,save,label=T("保存"),back=null){clearLocationReturn();dialogParent=back;if($('dialog').open)$('dialog').close();$('dialogBody').innerHTML=html;$('save').textContent=label;$('save').hidden=!save;$('cancel').textContent=save?T("取消"):T("关闭");$('form').onsubmit=e=>{e.preventDefault();if(save&&save()!==false)$('dialog').close();};$('dialog').showModal();}
+function dialog(html,save,label=T("保存"),back=null){clearLocationReturn();dialogParent=back;if($('dialog').open)$('dialog').close();$('dialogBody').innerHTML=html;$('save').textContent=label;$('save').hidden=!save;$('cancel').textContent=save?T("取消"):T("关闭");$('form').onsubmit=e=>{e.preventDefault();if(save&&save()!==false)$('dialog').close();};showMainDialog();}
 function goBack(){const top=document.querySelector('#deleteConfirm[open]')||document.querySelector('#imageViewer[open]');if(top){top.close();return true;}if($('dialog').open){const back=dialogParent;if(back)back();else $('dialog').close();return true;}return returnFromLocation();}
 window.goBack=goBack;$('dialog').addEventListener('cancel',e=>{e.preventDefault();goBack();});
 $('cancel').onclick=()=>$('dialog').close();
@@ -61,13 +63,13 @@ function attrRows(attrs){return Object.entries(attrs).map(([k,v])=>`<div class="
 function readAttrs(){const attrs={};for(const row of $('attrs').children){const inputs=row.querySelectorAll('input'),k=inputs[0].value.trim();if(k)attrs[k]=inputs[1].value;}return attrs;}
 function imageUrl(file){return 'https://local.app/images/'+encodeURIComponent(file);}
 function showProductImage(file){
- let viewer=$('imageViewer');if(!viewer){viewer=document.createElement('dialog');viewer.id='imageViewer';document.body.append(viewer);}
+ let viewer=$('imageViewer');if(!viewer){viewer=document.createElement('dialog');viewer.id='imageViewer';viewer.addEventListener('close',focusManagementHeading);document.body.append(viewer);}
  viewer.innerHTML=I18n.html("<button type=\"button\" id=\"closeImage\">关闭图片</button><img alt=\"商品附图\" src=\"")+imageUrl(file)+'">';$('closeImage').onclick=()=>viewer.close();viewer.showModal();
 }
 // A separate modal preserves unsaved form values when deletion is cancelled.
 function requestDelete(title,message,action){
  if(!state.settings.confirmDeletion){action();return;}
- let box=$('deleteConfirm');if(!box){box=document.createElement('dialog');box.id='deleteConfirm';document.body.append(box);}
+ let box=$('deleteConfirm');if(!box){box=document.createElement('dialog');box.id='deleteConfirm';box.addEventListener('close',focusManagementHeading);document.body.append(box);}
  if(box.open)return;
  box.innerHTML=I18n.html("<h2 id=\"deleteTitle\"></h2><p id=\"deleteMessage\"></p><div class=\"actions\"><button type=\"button\" id=\"cancelDelete\">取消</button><button type=\"button\" id=\"confirmDelete\" class=\"danger\">确认删除</button></div>");
  box.setAttribute('aria-labelledby','deleteTitle');$('deleteTitle').textContent=title;$('deleteMessage').textContent=message;

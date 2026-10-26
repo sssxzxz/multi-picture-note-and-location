@@ -1,0 +1,24 @@
+const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
+const {chromium}=require(path.join(process.env.NODE_REPL_NODE_MODULE_DIRS,'playwright'));
+const M=require('../app/src/main/assets/model.js');
+(async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:'C:/Users/49482/AppData/Local/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-win64/chrome-headless-shell.exe',args:['--no-sandbox']});
+ try{
+ const page=await browser.newPage({locale:"zh-CN",viewport:{width:412,height:850}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const s=M.fresh();s.settings.language="zh-CN";s.products={a:{model:'Ab12',price:'9',attrs:{材质:'木'},images:[]},b:{model:'ab12',price:'8',attrs:{}},c:{model:'C9',price:'7',attrs:{}}};
+ const mark=(id,product,x,y)=>({id,product,x,y,shape:'dot',angle:0,w:.08,h:.06});
+ s.photos=[{id:'p1',name:'第一张',file:'img_a.jpg',marks:[mark('right','a',.7,.4),mark('left','a',.05,.4),mark('middle','b',.4,.6),mark('other','c',.5,.7)]},{id:'p2',name:'第二张',file:'img_b.jpg',marks:[mark('last','a',.1,.4)]}];
+ await page.addInitScript(s=>{window.saved=sessionStorage.getItem('saved')||JSON.stringify(s);window.Native={load:()=>window.saved,save:t=>{sessionStorage.setItem('saved',t);window.saved=t;return '';},importPrices:request=>window.priceToken=request};},s);
+ await page.route('https://local.app/**',async route=>{const u=new URL(route.request().url());if(u.pathname.startsWith('/images'))return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900"><rect width="1200" height="900" fill="#91877b"/><path d="M0 250H1200M0 650H1200" stroke="#51483d" stroke-width="16"/></svg>'});const file=u.pathname==='/'?'index.html':u.pathname.slice(1);await route.fulfill({contentType:file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':'text/html',body:fs.readFileSync(path.join(__dirname,'../app/src/main/assets',file))});});
+ await page.goto('https://local.app');await page.waitForFunction(()=>bitmap);
+ await page.evaluate(()=>{window.autoInputFocus=[];document.addEventListener('focusin',e=>{if(e.target.matches('input:not([type=checkbox]),textarea'))autoInputFocus.push(e.target.id);});});
+ const reset=()=>page.evaluate(()=>autoInputFocus=[]);
+ const noInput=async()=>{assert.equal(await page.evaluate(()=>document.activeElement.matches('input:not([type=checkbox]),textarea')),false);assert.deepEqual(await page.evaluate(()=>autoInputFocus),[]);};
+ await page.locator('#menu').click();await noInput();await page.locator('#products').click();await noInput();
+ await page.locator('#productSearch').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'productSearch');await page.locator('#productSearch').fill('Ab');await reset();await page.locator('#productList button').first().click();await noInput();await page.locator('#productPrice').click();await page.locator('#productPrice').fill('55');await reset();await page.evaluate(()=>goBack());await noInput();assert.equal(await page.locator('#productSearch').inputValue(),'Ab');
+ await page.locator('#productList button').first().click();await noInput();await page.locator('#productPrice').fill('66');await reset();await page.locator('#locations button').first().click();await page.locator('#locationBack').click();await noInput();assert.equal(await page.locator('#productPrice').inputValue(),'66');await page.locator('#productPrice').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'productPrice');await reset();await page.locator('#locations button').first().click();await page.evaluate(()=>goBack());await noInput();
+ await page.evaluate(()=>goBack());await noInput();await page.evaluate(()=>goBack());await noInput();await page.locator('#rename').click();await noInput();await page.locator('#photoName').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'photoName');await reset();await page.evaluate(()=>goBack());await noInput();await page.locator('#display').click();await noInput();await page.locator('#font').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'font');await reset();await page.evaluate(()=>goBack());await noInput();
+ await page.locator('#importPrices').click();await page.evaluate(()=>onPricesLoaded({request:priceRequest,sheets:[{name:'价格',rows:[['型号','价格'],['Ab12','20']]}]}));await noInput();await page.locator('#headerRow').click();await reset();await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#dialog h2').textContent==='确认覆盖价格');await noInput();await page.evaluate(()=>goBack());await noInput();await page.evaluate(()=>goBack());await noInput();
+ assert.deepEqual(errors,[]);console.log('通过：管理/搜索/详情/设置/重命名/导入预览/定位返回不自动聚焦输入框，手动点击可输入，草稿和筛选条件保留。');
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exit(1);});

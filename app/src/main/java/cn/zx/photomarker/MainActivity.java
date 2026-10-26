@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
  private String resolveLanguage(String value){String v=value.equals("auto")?Locale.getDefault().toLanguageTag():value;if(v.toLowerCase(Locale.ROOT).startsWith("zh"))return v.matches("(?i).*(TW|HK|MO|Hant).*")?"zh-TW":"zh-CN";String base=v.split("-")[0];return Arrays.asList("en","bg","ja","ko","ru","de","fr","es").contains(base)?base:"en";}
  private String L(String key){if(language.equals("zh-CN"))return key;JSONObject dict=translations.optJSONObject(language);return dict==null?key:dict.optString(key,key);}
  public class Bridge {
+  @JavascriptInterface public void dismissKeyboard(){runOnUiThread(()->{android.view.inputmethod.InputMethodManager ime=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(ime!=null)ime.hideSoftInputFromWindow(web.getWindowToken(),0);});}
   @JavascriptInterface public String systemLanguage(){return Locale.getDefault().toLanguageTag();}
   @JavascriptInterface public void setLanguage(String value){language=resolveLanguage(value);}
 
