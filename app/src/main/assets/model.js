@@ -87,15 +87,20 @@
  }
  function comparePrices(a,b){if(a.key==='empty'||b.key==='empty')return Number(a.key==='empty')-Number(b.key==='empty');if(a.number!==null&&b.number!==null)return a.number-b.number;if(a.number!==null||b.number!==null)return a.number!==null?-1:1;return a.label.localeCompare(b.label,'zh-CN',{numeric:true});}
  function priceOptions(s){const values=new Map();for(const p of Object.values(s.products)){const info=priceInfo(p.price);if(info.key!=='empty')values.set(info.key,info);}return [...values.values()].sort(comparePrices);}
- function productRows(s,query='',price='all',sort='original'){
+ const imageCount=p=>Array.isArray(p.images)?p.images.length:0;
+ const attributeValue=(p,name)=>Object.prototype.hasOwnProperty.call(p.attrs||{},name)?String(p.attrs[name]??'').trim():'';
+ function imageCounts(s){return [...new Set(Object.values(s.products).map(imageCount).filter(n=>n>0))].sort((a,b)=>a-b);}
+ function attributeOptions(s){const fields=new Map();for(const p of Object.values(s.products))for(const name of Object.keys(p.attrs||{})){if(!fields.has(name))fields.set(name,new Set());const value=attributeValue(p,name);if(value)fields.get(name).add(value);}return [...fields].map(([name,values])=>({name,values:[...values].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))}));}
+ function productRows(s,query='',price='all',sort='original',images='all',attributes=[]){
   const counts=new Map();for(const photo of s.photos)for(const m of photo.marks)counts.set(m.product,(counts.get(m.product)||0)+1);
   let rows=Object.entries(s.products).map(([id,prod])=>({id,prod,count:counts.get(id)||0}));
   const q=query.trim().toLowerCase();rows=rows.filter(r=>r.prod.model.toLowerCase().includes(q)&&(price==='all'||priceInfo(r.prod.price).key===price));
+  rows=rows.filter(({prod})=>(images==='all'||(images==='none'?imageCount(prod)===0:images==='any'?imageCount(prod)>0:images==='count:'+imageCount(prod)))&&attributes.every(({name,value})=>value==='all'||(value==='empty'?attributeValue(prod,name)==='':value==='value:'+attributeValue(prod,name))));
   const direction=sort.endsWith('-desc')?-1:1;
   if(sort.startsWith('model-'))rows.sort((a,b)=>direction*a.prod.model.localeCompare(b.prod.model,'zh-CN',{numeric:true,sensitivity:'base'}));
   if(sort.startsWith('count-'))rows.sort((a,b)=>direction*(a.count-b.count));
   if(sort.startsWith('price-'))rows.sort((a,b)=>{const x=priceInfo(a.prod.price),y=priceInfo(b.prod.price);if(x.key==='empty'||y.key==='empty')return Number(x.key==='empty')-Number(y.key==='empty');return direction*comparePrices(x,y);});
   return rows;
  }
- const api={priceInfo,priceOptions,productRows,targets,centeredView,pricePlan,fresh,id,product,matches,results,saveProduct,validate,normalize,deleteProducts};if(typeof module!=='undefined')module.exports=api;root.Model=api;
+ const api={imageCounts,attributeOptions,priceInfo,priceOptions,productRows,targets,centeredView,pricePlan,fresh,id,product,matches,results,saveProduct,validate,normalize,deleteProducts};if(typeof module!=='undefined')module.exports=api;root.Model=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
