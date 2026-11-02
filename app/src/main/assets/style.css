@@ -14,3 +14,6 @@
 
 /* Reserve space for translated menu labels and allow long option text to fit. */
 .search{right:calc(var(--menu-width,60px) + 24px)}header{max-width:40vw}header button{max-width:40vw;overflow-wrap:anywhere}.grid>*{min-width:0}select{max-width:100%}#nav{max-width:40vw}#nav button{overflow-wrap:anywhere}
+
+/* Keep dialog controls and photo content independent of home button transparency. */
+body>header button,body>.search button,body>.meta button,#stage button,#editbar button,body>footer button,#locationBack,#toggleTools{filter:opacity(var(--home-button-opacity,1))}
