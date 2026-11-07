@@ -17,3 +17,14 @@
 
 /* Keep dialog controls and photo content independent of home button transparency. */
 body>header button,body>.search button,body>.meta button,#stage button,#editbar button,body>footer button,#locationBack,#toggleTools{filter:opacity(var(--home-button-opacity,1))}
+/* A quiet, non-interactive map stays anchored while the photo moves. */
+:root{--minimap-size:clamp(104px,30vw,132px)}
+#shelfMinimap{position:fixed;left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));width:var(--minimap-size);padding:7px;border:1px solid #ffffffd9;border-radius:13px;background:#f5faf9ed;box-shadow:0 2px 12px #0003;z-index:2;pointer-events:none;line-height:0}
+#shelfMinimap[hidden]{display:none}
+#shelfMinimap svg{display:block;width:100%;height:auto}
+#shelfPreview{width:min(100%,240px);margin:8px auto 16px;padding:12px;border-radius:16px;background:#f1f6f5;line-height:0}
+#shelfPreview svg{display:block;width:100%;height:auto}
+.shelf-photo-name{overflow-wrap:anywhere}
+#editbar{bottom:calc(max(12px,env(safe-area-inset-bottom)) + var(--minimap-size) + 12px)}
+@media(max-height:500px){:root{--minimap-size:92px}}
+@media(max-height:500px) and (min-width:560px){#editbar{left:116px;right:116px;bottom:65px;max-height:98px}}

@@ -1,5 +1,6 @@
 (function(root){
  'use strict';
+ const shelfIds=new Set((typeof module!=='undefined'?require('./shelf-map.js'):root.ShelfMap).shelves.map(s=>s.id));
  const fresh=()=>({version:1,photos:[],products:{},settings:{buttonTransparency:0,language:'en',confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
  function product(s,m){return s.products[m.product]||{model:'',price:'',attrs:{}};}
@@ -36,7 +37,7 @@
   if(!s||s.version!==1||!Array.isArray(s.photos)||!s.products||!s.settings)throw Error('备份格式不正确');
   const models=new Set(),ids=new Set();
   Object.values(s.products).forEach(p=>{if(typeof p.model!=='string'||typeof p.price!=='string'||!p.attrs||typeof p.attrs!=='object')throw Error('商品资料损坏');if(p.images!==undefined&&(!Array.isArray(p.images)||p.images.some(f=>typeof f!=='string'||!/^img_[a-zA-Z0-9-]+\.jpg$/.test(f))||new Set(p.images).size!==p.images.length))throw Error('商品附图资料损坏');if(p.model){if(models.has(p.model))throw Error('型号重复');models.add(p.model);}});
-  s.photos.forEach(p=>{validateAnnotations(p);if(!p.id||ids.has(p.id)||!/^img_[a-zA-Z0-9-]+\.jpg$/.test(p.file)||typeof p.name!=='string'||!Array.isArray(p.marks))throw Error('照片资料损坏');ids.add(p.id);p.marks.forEach(m=>{if(!s.products[m.product]||!['dot','rect','ellipse'].includes(m.shape)||!['x','y','w','h','angle'].every(k=>Number.isFinite(m[k]))||m.x<0||m.x>1||m.y<0||m.y>1||m.w<=0||m.h<=0)throw Error('标记资料损坏');});});
+  s.photos.forEach(p=>{if(p.shelfId!==undefined&&(typeof p.shelfId!=='string'||(p.shelfId!==''&&!shelfIds.has(p.shelfId))))throw Error('货架绑定资料损坏');validateAnnotations(p);if(!p.id||ids.has(p.id)||!/^img_[a-zA-Z0-9-]+\.jpg$/.test(p.file)||typeof p.name!=='string'||!Array.isArray(p.marks))throw Error('照片资料损坏');ids.add(p.id);p.marks.forEach(m=>{if(!s.products[m.product]||!['dot','rect','ellipse'].includes(m.shape)||!['x','y','w','h','angle'].every(k=>Number.isFinite(m[k]))||m.x<0||m.x>1||m.y<0||m.y>1||m.w<=0||m.h<=0)throw Error('标记资料损坏');});});
   if(!Number.isFinite(s.settings.font)||s.settings.font<8||s.settings.font>40||!Array.isArray(s.settings.fields))throw Error('显示设置损坏');return s;
  }
  function targets(s,q){return s.photos.flatMap(photo=>matches(s,photo,q).slice().sort((a,b)=>a.x-b.x||a.y-b.y).map(mark=>({photo,mark})));}
