@@ -28,3 +28,12 @@ body>header button,body>.search button,body>.meta button,#stage button,#editbar 
 #editbar{bottom:calc(max(12px,env(safe-area-inset-bottom)) + var(--minimap-size) + 12px)}
 @media(max-height:500px){:root{--minimap-size:92px}}
 @media(max-height:500px) and (min-width:560px){#editbar{left:116px;right:116px;bottom:65px;max-height:98px}}
+
+#sortPhotos{margin-bottom:12px}
+.photo-order{max-height:48dvh;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.photo-order-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #dbe5e3;background:white}
+.photo-order-row.dragging{background:#e0f5f0;outline:2px solid #008d7c;outline-offset:-2px;border-radius:10px}
+.order-handle{touch-action:none;cursor:grab;font-size:24px;padding:4px 10px;flex:none;user-select:none}
+.order-index{font-size:12px;color:#587276;min-width:16px;text-align:center;font-variant-numeric:tabular-nums}
+.order-name{flex:1;min-width:0;overflow-wrap:anywhere}
+.order-up,.order-down{flex:none;padding:8px 12px}

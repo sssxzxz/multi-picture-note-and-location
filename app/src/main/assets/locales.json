@@ -263,7 +263,12 @@
     "不绑定货架": "不綁定貨架",
     "选择货架后，左下角小地图会高亮对应位置。": "選擇貨架後，左下角小地圖會醒目顯示對應位置。",
     "货架位置小地图": "貨架位置小地圖",
-    "货架绑定资料损坏": "貨架綁定資料損壞"
+    "货架绑定资料损坏": "貨架綁定資料損壞",
+    "调整顺序": "調整順序",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "拖動把手調整照片順序，也可使用上下按鈕。儲存後生效。",
+    "拖动排序": "拖動排序",
+    "上移": "上移",
+    "下移": "下移"
   },
   "en": {
     "语言": "Language",
@@ -529,7 +534,12 @@
     "不绑定货架": "No shelf",
     "选择货架后，左下角小地图会高亮对应位置。": "Select a shelf to highlight its location on the bottom-left mini map.",
     "货架位置小地图": "Shelf location mini map",
-    "货架绑定资料损坏": "Shelf link data is damaged"
+    "货架绑定资料损坏": "Shelf link data is damaged",
+    "调整顺序": "Reorder photos",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "Drag the handles or use the arrow buttons to reorder photos. Save to apply.",
+    "拖动排序": "Drag to reorder",
+    "上移": "Move up",
+    "下移": "Move down"
   },
   "bg": {
     "语言": "Език",
@@ -795,7 +805,12 @@
     "不绑定货架": "Без рафт",
     "选择货架后，左下角小地图会高亮对应位置。": "Изберете рафт, за да се открои местоположението му на миникартата долу вляво.",
     "货架位置小地图": "Миникарта на рафтовете",
-    "货架绑定资料损坏": "Данните за връзката с рафта са повредени"
+    "货架绑定资料损坏": "Данните за връзката с рафта са повредени",
+    "调整顺序": "Подреди снимките",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "Плъзнете дръжките или използвайте стрелките, за да подредите снимките. Запазете промените.",
+    "拖动排序": "Плъзнете за подреждане",
+    "上移": "Нагоре",
+    "下移": "Надолу"
   },
   "ja": {
     "语言": "言語",
@@ -1061,7 +1076,12 @@
     "不绑定货架": "関連付けなし",
     "选择货架后，左下角小地图会高亮对应位置。": "棚を選ぶと、左下のミニマップで位置が強調表示されます。",
     "货架位置小地图": "棚の位置マップ",
-    "货架绑定资料损坏": "棚の関連付けデータが破損しています"
+    "货架绑定资料损坏": "棚の関連付けデータが破損しています",
+    "调整顺序": "写真の並べ替え",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "ハンドルをドラッグするか上下ボタンで写真を並べ替え、保存してください。",
+    "拖动排序": "ドラッグで並べ替え",
+    "上移": "上へ",
+    "下移": "下へ"
   },
   "ko": {
     "语言": "언어",
@@ -1327,7 +1347,12 @@
     "不绑定货架": "연결 안 함",
     "选择货架后，左下角小地图会高亮对应位置。": "선반을 선택하면 왼쪽 아래 미니맵에서 해당 위치가 강조됩니다.",
     "货架位置小地图": "선반 위치 미니맵",
-    "货架绑定资料损坏": "선반 연결 데이터가 손상되었습니다"
+    "货架绑定资料损坏": "선반 연결 데이터가 손상되었습니다",
+    "调整顺序": "사진 순서 변경",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "핸들을 드래그하거나 위아래 버튼으로 사진 순서를 변경하세요. 저장하면 적용됩니다.",
+    "拖动排序": "드래그하여 순서 변경",
+    "上移": "위로",
+    "下移": "아래로"
   },
   "ru": {
     "语言": "Язык",
@@ -1593,7 +1618,12 @@
     "不绑定货架": "Без привязки",
     "选择货架后，左下角小地图会高亮对应位置。": "Выберите стеллаж, чтобы выделить его расположение на мини-карте внизу слева.",
     "货架位置小地图": "Мини-карта стеллажей",
-    "货架绑定资料损坏": "Данные привязки стеллажа повреждены"
+    "货架绑定资料损坏": "Данные привязки стеллажа повреждены",
+    "调整顺序": "Порядок фотографий",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "Перетаскивайте фотографии за значок или используйте стрелки. Сохраните изменения.",
+    "拖动排序": "Перетащить для сортировки",
+    "上移": "Вверх",
+    "下移": "Вниз"
   },
   "de": {
     "语言": "Sprache",
@@ -1859,7 +1889,12 @@
     "不绑定货架": "Kein Regal",
     "选择货架后，左下角小地图会高亮对应位置。": "Wählen Sie ein Regal, um seine Position auf der Minikarte unten links hervorzuheben.",
     "货架位置小地图": "Minikarte der Regale",
-    "货架绑定资料损坏": "Die Daten der Regalzuordnung sind beschädigt"
+    "货架绑定资料损坏": "Die Daten der Regalzuordnung sind beschädigt",
+    "调整顺序": "Fotos sortieren",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "Ziehen Sie die Griffe oder verwenden Sie die Pfeiltasten. Zum Übernehmen speichern.",
+    "拖动排序": "Zum Sortieren ziehen",
+    "上移": "Nach oben",
+    "下移": "Nach unten"
   },
   "fr": {
     "语言": "Langue",
@@ -2125,7 +2160,12 @@
     "不绑定货架": "Aucune étagère",
     "选择货架后，左下角小地图会高亮对应位置。": "Sélectionnez une étagère pour mettre sa position en évidence sur la mini-carte en bas à gauche.",
     "货架位置小地图": "Mini-carte des étagères",
-    "货架绑定资料损坏": "Les données d’association à l’étagère sont endommagées"
+    "货架绑定资料损坏": "Les données d’association à l’étagère sont endommagées",
+    "调整顺序": "Réorganiser les photos",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "Faites glisser les poignées ou utilisez les flèches. Enregistrez pour appliquer.",
+    "拖动排序": "Glisser pour réorganiser",
+    "上移": "Monter",
+    "下移": "Descendre"
   },
   "es": {
     "语言": "Idioma",
@@ -2391,6 +2431,11 @@
     "不绑定货架": "Sin estantería",
     "选择货架后，左下角小地图会高亮对应位置。": "Selecciona una estantería para resaltar su ubicación en el minimapa de abajo a la izquierda.",
     "货架位置小地图": "Minimapa de estanterías",
-    "货架绑定资料损坏": "Los datos del vínculo con la estantería están dañados"
+    "货架绑定资料损坏": "Los datos del vínculo con la estantería están dañados",
+    "调整顺序": "Ordenar fotos",
+    "拖动把手调整照片顺序，也可使用上下按钮。保存后生效。": "Arrastra los controles o usa las flechas para ordenar las fotos. Guarda para aplicar.",
+    "拖动排序": "Arrastrar para ordenar",
+    "上移": "Subir",
+    "下移": "Bajar"
   }
 }

@@ -115,7 +115,37 @@ function bindPhotoShelf(){
  const preview=()=>{$('shelfPreview').innerHTML=ShelfMap.svg($('shelfSelect').value);};
  $('shelfSelect').onchange=preview;preview();
 }
-function choosePhoto(){dialog(I18n.html("<h2>照片</h2><div id=\"photoList\" class=\"list\"></div>"),null);state.photos.forEach(photo=>{const b=document.createElement('button');b.textContent=photo.name+' · '+photo.marks.length+T(" 个标记");b.onclick=()=>{$('search').value='';q='';targetId=null;current=photo.id;$('dialog').close();refresh();};$('photoList').append(b);});}
+function choosePhoto(){dialog(I18n.html("<h2>照片</h2><button type=\"button\" id=\"sortPhotos\">调整顺序</button><div id=\"photoList\" class=\"list\"></div>"),null);$('sortPhotos').disabled=state.photos.length<2;$('sortPhotos').onclick=sortPhotos;state.photos.forEach(photo=>{const b=document.createElement('button');b.textContent=photo.name+' · '+photo.marks.length+T(" 个标记");b.onclick=()=>{$('search').value='';q='';targetId=null;current=photo.id;$('dialog').close();refresh();};$('photoList').append(b);});}
+function sortPhotos(){
+ const original=state.photos.slice();
+ let dragging=null,frame=0,lastY=0,dragOrder=[];
+ const stop=()=>{cancelAnimationFrame(frame);frame=0;if(dragging)dragging.classList.remove('dragging');dragging=null;};
+ dialog('<h2>'+esc(T('调整顺序'))+'</h2><p class="note">'+esc(T('拖动把手调整照片顺序，也可使用上下按钮。保存后生效。'))+'</p><div id="photoOrder" class="photo-order"></div>',()=>{
+  const ids=[...host.children].map(row=>row.dataset.id);
+  if(ids.every((id,i)=>id===original[i].id))return;
+  const before=JSON.stringify(state),previous=state.photos;
+  state.photos=ids.map(id=>original.find(photo=>photo.id===id));
+  if(!persist()){state.photos=previous;return false;}
+  history.push(before);if(history.length>40)history.shift();future=[];stop();refresh(false);
+ },T('保存'),choosePhoto);
+ const host=$('photoOrder');
+ const update=()=>{[...host.children].forEach((row,i)=>{row.querySelector('.order-index').textContent=i+1;row.querySelector('.order-up').disabled=i===0;row.querySelector('.order-down').disabled=i===host.children.length-1;});};
+ const move=(row,d)=>{const other=d<0?row.previousElementSibling:row.nextElementSibling;if(!other)return;if(d<0)host.insertBefore(row,other);else host.insertBefore(other,row);update();};
+ original.forEach(photo=>{
+  const row=document.createElement('div');row.className='photo-order-row';row.dataset.id=photo.id;
+  row.innerHTML='<button type="button" class="order-handle" aria-label="'+esc(T('拖动排序'))+'">⠿</button><span class="order-index"></span><span class="order-name">'+esc(photo.name)+'</span><button type="button" class="order-up" aria-label="'+esc(T('上移'))+'">↑</button><button type="button" class="order-down" aria-label="'+esc(T('下移'))+'">↓</button>';
+  row.querySelector('.order-up').onclick=()=>move(row,-1);row.querySelector('.order-down').onclick=()=>move(row,1);
+  row.querySelector('.order-handle').onkeydown=e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();move(row,e.key==='ArrowUp'?-1:1);}};
+  host.append(row);
+ });update();
+ const place=()=>{const other=[...host.children].find(row=>row!==dragging&&lastY<row.getBoundingClientRect().top+row.offsetHeight/2);host.insertBefore(dragging,other||null);update();};
+ const scroll=()=>{if(!dragging||!host.isConnected||!$('dialog').open){stop();return;}const r=host.getBoundingClientRect();const delta=lastY<r.top+36?-8:lastY>r.bottom-36?8:0;if(delta){host.scrollTop+=delta;place();}frame=requestAnimationFrame(scroll);};
+ host.onpointerdown=e=>{const handle=e.target.closest('.order-handle');if(!handle||e.button!==0||dragging)return;e.preventDefault();dragOrder=[...host.children];dragging=handle.parentElement;dragging.classList.add('dragging');lastY=e.clientY;host.setPointerCapture(e.pointerId);frame=requestAnimationFrame(scroll);};
+ host.onpointermove=e=>{if(!dragging||!host.hasPointerCapture(e.pointerId))return;lastY=e.clientY;place();};
+ host.onpointerup=e=>{if(host.hasPointerCapture(e.pointerId)){stop();host.releasePointerCapture(e.pointerId);}};
+ host.onpointercancel=e=>{if(host.hasPointerCapture(e.pointerId)){dragOrder.forEach(row=>host.append(row));update();stop();host.releasePointerCapture(e.pointerId);}};
+ host.onlostpointercapture=stop;
+}
 function manage(){dialog(I18n.html("<h2>管理</h2><div class=\"list\"><button id=\"importPhoto\">＋ 导入照片</button><button id=\"rename\">重命名当前照片</button><button id=\"bindShelf\">绑定当前照片的货架</button><button id=\"display\">统一显示设置</button><button id=\"products\">商品资料</button><button id=\"importPrices\">从表格导入价格</button><button id=\"export\">导出完整备份</button><button id=\"restore\">恢复完整备份</button><button id=\"recovery\">导出恢复前的自动备份</button><button id=\"removePhoto\" class=\"danger\">删除当前照片及其标记</button></div><p class=\"note\">资料仅保存在此手机。请定期导出备份到手机以外的位置。</p>"),null,T("保存"),()=>$('dialog').close());
  $('bindShelf').disabled=!p();$('bindShelf').onclick=bindPhotoShelf;
  $('importPhoto').onclick=importPhoto;$('display').onclick=settings;$('products').onclick=()=>products();$('importPrices').onclick=startPriceImport;$('rename').onclick=()=>{if(!p())return;dialog(I18n.html("<h2>照片名称</h2><input id=\"photoName\" required value=\"")+esc(p().name)+'">',()=>{checkpoint();p().name=$('photoName').value.trim()||T("未命名照片");persist();refresh(false);},T("保存"),manage);};
