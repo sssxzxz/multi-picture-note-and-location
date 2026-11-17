@@ -95,12 +95,12 @@ function editMark(m,isNew=false){if(!m)return;const prod=M.product(state,m);let 
  if(!isNew)$('deleteMark').onclick=()=>requestDelete(T("删除此位置标记？"),T("将移除此位置。如果这是商品的最后一个位置，其商品资料也会删除。可以撤销。"),()=>{checkpoint();p().marks=p().marks.filter(x=>x.id!==m.id);persist();selected=null;$('dialog').close();refresh(false);});
 }
 function details(m){const prod=M.product(state,m);dialog(`<h2>${esc(prod.model||T("未填写型号"))}</h2><p>${I18n.escape(T("价格："))}${esc(prod.price||T("未填写"))}</p>${Object.entries(prod.attrs).map(([k,v])=>`<p>${esc(k)}：${esc(v)}</p>`).join('')}<p class="note">${esc(p().name)} · ${I18n.escape(T("进入编辑后可修改资料"))}</p>${imageSection(false)}<div id="locations" class="list"></div>`,null);imageEditor(prod.images,false);locationSection(m.product);}
-function settings(){const attrs=[...new Set(Object.values(state.products).flatMap(x=>Object.keys(x.attrs)))];const fields=[['model',T("型号")],['price',T("价格")],...attrs.map(k=>[k,k])];dialog(`<h2>${I18n.escape(T("统一显示设置"))}</h2><button type="button" id="languageSettings">${I18n.escape(T("语言"))}</button><label for="buttonTransparency">${esc(T("首页按钮透明度"))} <output id="buttonTransparencyValue">${state.settings.buttonTransparency}%</output></label><input id="buttonTransparency" type="range" min="0" max="100" step="1" value="${state.settings.buttonTransparency}"><p class="note">${esc(T("0% 不透明，100% 完全透明；仅影响首页按钮。"))}</p><label><input id="confirmDeletion" type="checkbox" ${state.settings.confirmDeletion?'checked':''}> ${I18n.escape(T("删除前确认"))}</label><p class="note">${I18n.escape(T("统一控制照片、商品、位置标记、商品附图、画笔和文字的删除确认。关闭后直接删除。"))}</p><label><input id="autoHideTools" type="checkbox" ${state.settings.autoHideTools?'checked':''}> ${I18n.escape(T("移动或缩放照片时自动隐藏工具"))}</label><label><input id="labelsFollowZoom" type="checkbox" ${state.settings.labelsFollowZoom?'checked':''}> ${I18n.escape(T("信息跟随标记缩放"))}</label><label>${I18n.escape(T("文字大小（跟随缩放时为照片初始铺满的字号）"))}</label><input id="font" type="number" min="8" max="40" value="${state.settings.font}"><label>${I18n.escape(T("显示的资料"))}</label>${fields.map(([k,n])=>`<label><input type="checkbox" data-field="${esc(k)}" ${state.settings.fields.includes(k)?'checked':''}> ${esc(n)}</label>`).join('')}<p class="note">${I18n.escape(T("全部标记共用这些显示设置。开启跟随缩放：信息固定在标记旁，字号和间距随照片缩放；关闭：字号不变，信息自动避让。"))}</p>`,()=>{checkpoint();state.settings.buttonTransparency=Number($('buttonTransparency').value);state.settings.confirmDeletion=$('confirmDeletion').checked;state.settings.autoHideTools=$('autoHideTools').checked;state.settings.labelsFollowZoom=$('labelsFollowZoom').checked;state.settings.font=Number($('font').value);state.settings.fields=[...document.querySelectorAll('[data-field]:checked')].map(x=>x.dataset.field);persist();draw();},T("保存"),manage);$('languageSettings').onclick=languageSettings;$('buttonTransparency').oninput=()=>{const value=Number($('buttonTransparency').value);$('buttonTransparencyValue').textContent=value+'%';applyButtonTransparency(value);};}
+function settings(){const attrs=[...new Set(Object.values(state.products).flatMap(x=>Object.keys(x.attrs)))];const fields=[['model',T("型号")],['price',T("价格")],...attrs.map(k=>[k,k])];dialog(`<h2>${I18n.escape(T("统一显示设置"))}</h2><button type="button" id="languageSettings">${I18n.escape(T("语言"))}</button><button type="button" id="mapSettings">${esc(T("小地图方向"))}</button><label for="buttonTransparency">${esc(T("首页按钮透明度"))} <output id="buttonTransparencyValue">${state.settings.buttonTransparency}%</output></label><input id="buttonTransparency" type="range" min="0" max="100" step="1" value="${state.settings.buttonTransparency}"><p class="note">${esc(T("0% 不透明，100% 完全透明；仅影响首页按钮。"))}</p><label><input id="confirmDeletion" type="checkbox" ${state.settings.confirmDeletion?'checked':''}> ${I18n.escape(T("删除前确认"))}</label><p class="note">${I18n.escape(T("统一控制照片、商品、位置标记、商品附图、画笔和文字的删除确认。关闭后直接删除。"))}</p><label><input id="autoHideTools" type="checkbox" ${state.settings.autoHideTools?'checked':''}> ${I18n.escape(T("移动或缩放照片时自动隐藏工具"))}</label><label><input id="labelsFollowZoom" type="checkbox" ${state.settings.labelsFollowZoom?'checked':''}> ${I18n.escape(T("信息跟随标记缩放"))}</label><label>${I18n.escape(T("文字大小（跟随缩放时为照片初始铺满的字号）"))}</label><input id="font" type="number" min="8" max="40" value="${state.settings.font}"><label>${I18n.escape(T("显示的资料"))}</label>${fields.map(([k,n])=>`<label><input type="checkbox" data-field="${esc(k)}" ${state.settings.fields.includes(k)?'checked':''}> ${esc(n)}</label>`).join('')}<p class="note">${I18n.escape(T("全部标记共用这些显示设置。开启跟随缩放：信息固定在标记旁，字号和间距随照片缩放；关闭：字号不变，信息自动避让。"))}</p>`,()=>{checkpoint();state.settings.buttonTransparency=Number($('buttonTransparency').value);state.settings.confirmDeletion=$('confirmDeletion').checked;state.settings.autoHideTools=$('autoHideTools').checked;state.settings.labelsFollowZoom=$('labelsFollowZoom').checked;state.settings.font=Number($('font').value);state.settings.fields=[...document.querySelectorAll('[data-field]:checked')].map(x=>x.dataset.field);persist();draw();},T("保存"),manage);$('languageSettings').onclick=languageSettings;$('mapSettings').onclick=mapSettings;$('buttonTransparency').oninput=()=>{const value=Number($('buttonTransparency').value);$('buttonTransparencyValue').textContent=value+'%';applyButtonTransparency(value);};}
 // The map is an independent overlay; moving the photo never moves the layout.
 function updateShelfMinimap(){
  const photo=p(),map=$('shelfMinimap');map.hidden=!photo;
  map.setAttribute('aria-label',T('货架位置小地图')+(photo?.shelfId?' · '+photo.shelfId:''));
- map.innerHTML=photo?ShelfMap.svg(photo.shelfId):'';
+ map.innerHTML=photo?ShelfMap.svg(photo.shelfId,state.settings.mapRotation):'';
 }
 function bindPhotoShelf(){
  const photo=p();if(!photo)return;
@@ -112,7 +112,7 @@ function bindPhotoShelf(){
   history.push(before);if(history.length>40)history.shift();future=[];updateShelfMinimap();
  },T('保存'),manage);
  $('shelfSelect').value=photo.shelfId||'';
- const preview=()=>{$('shelfPreview').innerHTML=ShelfMap.svg($('shelfSelect').value);};
+ const preview=()=>{$('shelfPreview').innerHTML=ShelfMap.svg($('shelfSelect').value,state.settings.mapRotation);};
  $('shelfSelect').onchange=preview;preview();
 }
 function choosePhoto(){dialog(I18n.html("<h2>照片</h2><button type=\"button\" id=\"sortPhotos\">调整顺序</button><div id=\"photoList\" class=\"list\"></div>"),null);$('sortPhotos').disabled=state.photos.length<2;$('sortPhotos').onclick=sortPhotos;state.photos.forEach(photo=>{const b=document.createElement('button');b.textContent=photo.name+' · '+photo.marks.length+T(" 个标记");b.onclick=()=>{$('search').value='';q='';targetId=null;current=photo.id;$('dialog').close();refresh();};$('photoList').append(b);});}
@@ -201,3 +201,23 @@ function positionPhotoInfo(){document.documentElement.style.setProperty('--menu-
 new ResizeObserver(positionPhotoInfo).observe(document.querySelector('.search'));new ResizeObserver(positionPhotoInfo).observe($('menu'));window.addEventListener('resize',positionPhotoInfo);positionPhotoInfo();
 
 function languageSettings(){dialog('<h2>'+I18n.escape(T('语言'))+'</h2><select id="languageSelect"><option value="auto">'+I18n.escape(T('跟随系统'))+'</option>'+Object.entries(I18n.names).map(([id,name])=>'<option value="'+id+'">'+name+'</option>').join('')+'</select>',null,T('保存'),settings);$('languageSelect').value=state.settings.language;$('languageSelect').onchange=()=>{const previous=state.settings.language;state.settings.language=$('languageSelect').value;if(!persist()){state.settings.language=previous;return;}I18n.set(state.settings.language);refresh(false);languageSettings();};}
+
+function mapSettings(){
+ let rotation=state.settings.mapRotation;
+ dialog('<h2>'+esc(T('小地图方向'))+'</h2><div id="shelfPreview" aria-hidden="true"></div><div class="rotation-controls"><button type="button" id="rotateMap">'+esc(T('旋转 90°'))+'</button><output id="rotationValue"></output></div>',()=>{
+  if(rotation===state.settings.mapRotation)return;
+  const before=JSON.stringify(state),old=state.settings.mapRotation;state.settings.mapRotation=rotation;
+  if(!persist()){state.settings.mapRotation=old;return false;}
+  history.push(before);if(history.length>40)history.shift();future=[];updateShelfMinimap();
+ },T('保存'),settings);
+ const preview=()=>{$('shelfPreview').innerHTML=ShelfMap.svg(p()?.shelfId,rotation);$('rotationValue').textContent=rotation+'°';};
+ $('rotateMap').onclick=()=>{rotation=(rotation+90)%360;preview();};preview();
+}
+let searchComposing=false,compositionEnter=false;
+$('search').addEventListener('compositionstart',()=>{searchComposing=true;});
+$('search').addEventListener('compositionend',()=>{searchComposing=false;compositionEnter=true;setTimeout(()=>{compositionEnter=false;},0);});
+$('search').addEventListener('keydown',e=>{
+ if(e.key!=='Enter'&&e.key!=='Search')return;
+ if(searchComposing||compositionEnter||e.isComposing||e.keyCode===229)return;
+ e.preventDefault();if(!e.repeat&&q)nextTarget(1);
+});

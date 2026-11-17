@@ -37,3 +37,5 @@ body>header button,body>.search button,body>.meta button,#stage button,#editbar 
 .order-index{font-size:12px;color:#587276;min-width:16px;text-align:center;font-variant-numeric:tabular-nums}
 .order-name{flex:1;min-width:0;overflow-wrap:anywhere}
 .order-up,.order-down{flex:none;padding:8px 12px}
+
+.rotation-controls{display:flex;justify-content:center;align-items:center;gap:16px}.rotation-controls output{min-width:4ch;color:#587276;font-variant-numeric:tabular-nums}

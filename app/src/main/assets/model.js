@@ -1,7 +1,7 @@
 (function(root){
  'use strict';
  const shelfIds=new Set((typeof module!=='undefined'?require('./shelf-map.js'):root.ShelfMap).shelves.map(s=>s.id));
- const fresh=()=>({version:1,photos:[],products:{},settings:{buttonTransparency:0,language:'en',confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
+ const fresh=()=>({version:1,photos:[],products:{},settings:{mapRotation:0,buttonTransparency:0,language:'en',confirmDeletion:true,autoHideTools:true,labelsFollowZoom:true,font:14,fields:['model'],shape:'dot',width:.08,height:.06}});
  const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
  function product(s,m){return s.products[m.product]||{model:'',price:'',attrs:{}};}
  function matches(s,p,q){const query=q.toLowerCase();return query?p.marks.filter(m=>product(s,m).model.toLowerCase().includes(query)):[];}
@@ -23,6 +23,7 @@
   if(typeof s.settings.autoHideTools!=='boolean')s.settings.autoHideTools=true;
   if(typeof s.settings.labelsFollowZoom!=='boolean')s.settings.labelsFollowZoom=true;
   delete s.settings.productListTools;
+  if(![0,90,180,270].includes(s.settings.mapRotation))s.settings.mapRotation=0;
   if(!Number.isFinite(s.settings.buttonTransparency))s.settings.buttonTransparency=0;
   s.settings.buttonTransparency=Math.max(0,Math.min(100,s.settings.buttonTransparency));
   if(!['auto','zh-CN','zh-TW','en','bg','ja','ko','ru','de','fr','es'].includes(s.settings.language))s.settings.language='en';

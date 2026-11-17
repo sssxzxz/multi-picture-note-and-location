@@ -17,16 +17,17 @@
   {id:'A5',label:'A5',x:655,y:776,w:116,h:26},
   {id:'A6',label:'A6',x:655,y:596,w:61,h:155}
  ].map(Object.freeze));
- function svg(selectedId){
+ function svg(selectedId,rotation=0){
+  if(![0,90,180,270].includes(rotation))rotation=0;
   const blocks=shelves.map(s=>{
    const active=s.id===selectedId;
    return '<rect class="map-shelf'+(active?' is-selected':'')+'" data-shelf="'+s.id+'" x="'+s.x+'" y="'+s.y+'" width="'+s.w+'" height="'+s.h+'" rx="9" fill="'+(active?'#00a58f':'#c4d3d0')+'" stroke="'+(active?'#005d52':'#f8fbfa')+'" stroke-width="'+(active?'7':'4')+'"/>';
   }).join('');
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -12 868 836" aria-hidden="true" focusable="false" style="display:block;width:100%;height:100%">'+
-   '<path d="M0 0H844V812H645V416H0Z" fill="#f8fbfa"/>'+blocks+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -28 868 868" aria-hidden="true" focusable="false" style="display:block;width:100%;height:100%">'+
+   '<g transform="rotate('+rotation+' 422 406)"><path d="M0 0H844V812H645V416H0Z" fill="#f8fbfa"/>'+blocks+
    '<path d="M603 0H0V416H645V812H844V0H701" fill="none" stroke="#536e6a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>'+
    '<path d="M623 13L652 39L681 13" fill="none" stroke="#7e9691" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'+
-   '</svg>';
+   '</g></svg>';
  }
  const api=Object.freeze({shelves,svg});
  if(typeof module!=='undefined')module.exports=api;

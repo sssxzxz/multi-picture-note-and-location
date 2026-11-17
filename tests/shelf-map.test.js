@@ -26,3 +26,5 @@ test('布局完整包含图中十四个不同货架，预览不包含可见文�
   assert.equal((svg.match(/\bis-selected\b/g)||[]).length,selected?1:0);
  }
 });
+
+test('小地图角度默认和备份往返，非法值回退',()=>{for(const value of [undefined,null,45,'90',0,90,180,270]){const s=M.fresh();s.settings.mapRotation=value;const restored=M.normalize(M.validate(JSON.parse(JSON.stringify(s))));assert.equal(restored.settings.mapRotation,[0,90,180,270].includes(value)?value:0);}});
